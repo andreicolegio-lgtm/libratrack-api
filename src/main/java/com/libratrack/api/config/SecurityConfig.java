@@ -1,21 +1,37 @@
 package com.libratrack.api.config;
 
+import com.libratrack.api.config.filter.JwtAuthFilter;
+import com.libratrack.api.service.UserDetailsServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-@Configuration // Le dice a Spring que esta clase contiene configuración
-@EnableWebSecurity // Activa la seguridad web de Spring
+@Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtAuthFilter jwtAuthFilter;
+    private final UserDetailsServiceImpl userDetailsServiceImpl;
+
+    @Autowired
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UserDetailsServiceImpl userDetailsServiceImpl) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.userDetailsServiceImpl = userDetailsServiceImpl;
+    }
+
     /**
-     * Este es el "Bean" (objeto gestionado por Spring) que usaremos para cifrar.
-     * BCrypt es el algoritmo estándar de la industria para hashear contraseñas.
+     * El "Cifrador" de contraseñas
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -23,31 +39,50 @@ public class SecurityConfig {
     }
 
     /**
-     * Este es el "Rulebook" (libro de reglas) de nuestra seguridad.
-     * Aquí definimos qué rutas son públicas y cuáles están protegidas.
+     * El "Verificador": le dice a Spring cómo buscar usuarios
+     * (usa nuestro UserDetailsServiceImpl) y qué cifrador usamos.
+     */
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsServiceImpl);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    /**
+     * El "Jefe de Seguridad": Gestiona la autenticación.
+     * AuthController lo usará para procesar el login.
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    /**
+     * El "Libro de Reglas" de la API (el Filtro)
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Deshabilitar CSRF: Es una protección para webs, no necesaria
-            // para una API REST pura que no usa cookies de sesión.
-            .csrf(csrf -> csrf.disable())
-
-            // 2. Definir las reglas de autorización (quién puede acceder a qué)
+            .csrf(csrf -> csrf.disable()) // Deshabilita CSRF para APIs REST
+            
+            // Define qué rutas son públicas y cuáles privadas
             .authorizeHttpRequests(auth -> auth
-                // 1. Permitimos que CUALQUIERA acceda a nuestras rutas de autenticación (RF01, RF02)
-                .requestMatchers("/api/auth/**").permitAll()
-                
-                // 2. CUALQUIER OTRA petición requerirá autenticación
-                .anyRequest().authenticated()
+                .requestMatchers("/api/auth/**").permitAll() // /api/auth/ (login, registro) es público
+                .anyRequest().authenticated() // CUALQUIER OTRA ruta requiere un token
             )
             
-            // 3. Configurar la gestión de sesiones
-            // Le decimos a Spring que NO cree sesiones. Una API REST debe ser "stateless"
-            // (sin estado). Cada petición se autenticará por sí misma (con un token JWT).
+            // Le dice a Spring que NO cree sesiones (API "stateless")
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            );
+            )
+            
+            // Le dice a Spring que use nuestro "Verificador"
+            .authenticationProvider(authenticationProvider())
+            
+            // Le dice a Spring que use nuestro "Portero" (JwtAuthFilter)
+            // ANTES de su filtro de login estándar.
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

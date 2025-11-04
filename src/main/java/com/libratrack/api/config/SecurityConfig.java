@@ -68,8 +68,11 @@ public class SecurityConfig {
             
             // Define qué rutas son públicas y cuáles privadas
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // /api/auth/ (login, registro) es público
-                .anyRequest().authenticated() // CUALQUIER OTRA ruta requiere un token
+                // 1. Permitimos que CUALQUIERA acceda a nuestras rutas de autenticación (RF01, RF02)
+                .requestMatchers("/api/auth/**").permitAll()
+
+                // 2. CUALQUIER OTRA petición requerirá autenticación
+                .anyRequest().authenticated()
             )
             
             // Le dice a Spring que NO cree sesiones (API "stateless")

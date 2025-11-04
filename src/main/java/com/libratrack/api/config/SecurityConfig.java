@@ -40,8 +40,10 @@ public class SecurityConfig {
                 // Cualquier otra petición (ej. /api/elementos) requerirá autenticación
                 .requestMatchers("/api/admin/**").permitAll() // Temporal
                 .requestMatchers("/api/elementos/**").permitAll() // Temporal
-                // AÑADE ESTA LÍNATEMPORAL:
+                // AÑADE ESTA LÍNEA TEMPORAL:
                 .requestMatchers("/api/catalogo/**").permitAll()
+                // AÑADE ESTA LÍNEA TEMPORAL:
+                .requestMatchers("/api/resenas/**").permitAll()
                 .anyRequest().authenticated()
             )
             

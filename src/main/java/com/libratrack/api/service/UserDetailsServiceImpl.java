@@ -30,6 +30,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con username: " + username));
 
+        // --- INICIO DE LÍNEAS DE DEBUGGEO ---
+        System.out.println("\n--- [DEBUG DE ROLES] ---");
+        System.out.println(">>> Usuario encontrado: " + usuario.getUsername());
+        System.out.println(">>> Valor de 'esModerador' (leído por Java): " + usuario.getEsModerador());
+        // --- FIN DE LÍNEAS DE DEBUGGEO ---
+
         // 2. Definimos los "roles" o "permisos" de este usuario (RF03)
         Set<GrantedAuthority> authorities = new HashSet<>();
         
@@ -39,9 +45,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // Si nuestro booleano 'esModerador' es true, añadimos el rol de Moderador
         if (usuario.getEsModerador() != null && usuario.getEsModerador()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_MODERADOR"));
+            // --- LÍNEA DE DEBUGGEO 2 ---
+            System.out.println(">>> ¡Rol MODERADOR añadido!");
+            // --- FIN DE LÍNEA DE DEBUGGEO 2 ---
         }
         
-        // (En el futuro, podríamos añadir "ROLE_ADMINISTRADOR" aquí)
+        // --- LÍNEA DE DEBUGGEO 3 ---
+        System.out.println(">>> Roles finales asignados: " + authorities.toString());
+        System.out.println("--- [FIN DEBUG DE ROLES] ---\n");
+        // --- FIN DE LÍNEA DE DEBUGGEO 3 ---
 
         // 3. Devolvemos el objeto UserDetails que Spring entiende
         return new User(

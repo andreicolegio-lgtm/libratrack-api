@@ -5,11 +5,11 @@ import com.libratrack.api.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -71,19 +72,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 1. Rutas Públicas (Registro y Login)
                 .requestMatchers("/api/auth/**").permitAll()
-                
-                // 2. Rutas de Moderación (RF14, RF15)
-                // SOLO usuarios con el rol "ROLE_MODERADOR" pueden acceder
-                .requestMatchers("/api/moderacion/**").hasAuthority("ROLE_MODERADOR")
-                
-                // 3. Rutas de Usuario (Proponer, Catálogo, Reseñas, etc.)
-                // (Usamos HttpMethod para ser específicos)
-                .requestMatchers(HttpMethod.POST, "/api/propuestas").hasAuthority("ROLE_USER")
-                .requestMatchers("/api/catalogo/**").hasAuthority("ROLE_USER")
-                .requestMatchers("/api/resenas/**").hasAuthority("ROLE_USER")
-                .requestMatchers("/api/elementos/**").hasAuthority("ROLE_USER")
-                
-                // 4. CUALQUIER OTRA petición (que no hayamos listado) será denegada
+
+                // 2. CUALQUIER OTRA petición requerirá autenticación
                 .anyRequest().authenticated()
             )
             

@@ -1,12 +1,13 @@
 package com.libratrack.api.controller;
 
-import com.libratrack.api.entity.Elemento;
-import com.libratrack.api.entity.PropuestaElemento;
+import com.libratrack.api.dto.ElementoResponseDTO;
+import com.libratrack.api.dto.PropuestaResponseDTO;
 import com.libratrack.api.entity.Usuario;
 import com.libratrack.api.repository.UsuarioRepository;
 import com.libratrack.api.service.PropuestaElementoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -27,9 +28,10 @@ public class ModeracionController {
      * (Solo accesible para Moderadores/Admins).
      * URL: GET /api/moderacion/pendientes
      */
+    @PreAuthorize("hasAuthority('ROLE_MODERADOR')")
     @GetMapping("/pendientes")
-    public ResponseEntity<List<PropuestaElemento>> getPropuestasPendientes() {
-        List<PropuestaElemento> propuestas = propuestaService.getPropuestasPendientes();
+    public ResponseEntity<List<PropuestaResponseDTO>> getPropuestasPendientes() {
+        List<PropuestaResponseDTO> propuestas = propuestaService.getPropuestasPendientes();
         return ResponseEntity.ok(propuestas);
     }
 
@@ -38,6 +40,7 @@ public class ModeracionController {
      * (Solo accesible para Moderadores/Admins).
      * URL: POST /api/moderacion/aprobar/1 (donde 1 es el ID de la propuesta)
      */
+    @PreAuthorize("hasAuthority('ROLE_MODERADOR')")
     @PostMapping("/aprobar/{propuestaId}")
     public ResponseEntity<?> aprobarPropuesta(@PathVariable Long propuestaId, Principal principal) {
 
@@ -52,7 +55,7 @@ public class ModeracionController {
             // ¡Usamos el ID real!
             Long revisorId = revisor.getId(); 
 
-            Elemento nuevoElemento = propuestaService.aprobarPropuesta(propuestaId, revisorId);
+            ElementoResponseDTO nuevoElemento = propuestaService.aprobarPropuesta(propuestaId, revisorId);
             return ResponseEntity.ok(nuevoElemento);
         } catch (Exception e) {
             // Manejo de errores

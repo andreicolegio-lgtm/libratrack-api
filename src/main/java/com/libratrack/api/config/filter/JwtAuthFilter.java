@@ -32,6 +32,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        // --- DEBUG 1: ¿Se está ejecutando el filtro? ---
+        System.out.println("\n--- [DEBUG JWT FILTER] ---");
+        System.out.println(">>> Petición recibida para: " + request.getRequestURI());
+
         // 1. Extraer la cabecera "Authorization"
         String authHeader = request.getHeader("Authorization");
         String token = null;
@@ -40,24 +44,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // 2. Comprobar si es un token "Bearer"
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7); // Quita el "Bearer "
+            System.out.println(">>> Token Bearer encontrado.");
             try {
                 username = jwtService.extractUsername(token);
+                // --- DEBUG 2: ¿Se ha podido leer el token? ---
+                System.out.println(">>> Usuario extraído del token: " + username);
             } catch (Exception e) {
-                // (Opcional: registrar el error de token inválido)
-                System.err.println("Token JWT inválido o caducado: " + e.getMessage());
+                System.err.println("!!! ERROR AL PARSEAR EL TOKEN: " + e.getMessage());
             }
+        } else {
+            System.out.println(">>> No se ha encontrado cabecera 'Bearer'.");
         }
 
         // 3. Si tenemos un usuario y NO está ya autenticado...
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            
-            // 4. Cargamos los detalles del usuario desde la BD
+            System.out.println(">>> Usuario no autenticado, procediendo a cargar UserDetails...");
             UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(username);
 
             // 5. Validamos el token
             if (jwtService.validateToken(token, userDetails)) {
-                
-                // 6. Si es válido, creamos la autenticación para Spring Security
+                System.out.println(">>> ¡Token válido!");
+                // 6. Creamos la autenticación para Spring Security
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null, // No pasamos credenciales (contraseña)
@@ -68,9 +75,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 
                 // 7. Guardamos la autenticación en el contexto de seguridad
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                System.out.println(">>> Usuario autenticado y guardado en SecurityContext.");
+            } else {
+                System.err.println("!!! Token inválido (validación fallida).");
             }
         }
         
+        System.out.println("--- [FIN DEBUG JWT FILTER] ---\n");
         // 8. Continuamos con el resto de filtros
         filterChain.doFilter(request, response);
     }

@@ -1,6 +1,8 @@
 package com.libratrack.api.service;
 
+import com.libratrack.api.dto.ElementoResponseDTO;
 import com.libratrack.api.dto.PropuestaRequestDTO;
+import com.libratrack.api.dto.PropuestaResponseDTO;
 import com.libratrack.api.entity.Elemento;
 import com.libratrack.api.entity.Genero;
 import com.libratrack.api.entity.PropuestaElemento;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional; // ¡Importante
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class PropuestaElementoService {
@@ -67,10 +70,15 @@ public class PropuestaElementoService {
 
     /**
      * Obtiene la lista de propuestas pendientes (RF14 - Panel de Moderación).
-     * @return Lista de propuestas con estado PENDIENTE.
+     * @return Lista de DTOs de propuestas con estado PENDIENTE.
      */
-    public List<PropuestaElemento> getPropuestasPendientes() {
-        return propuestaRepo.findByEstadoPropuesta(EstadoPropuesta.PENDIENTE);
+    public List<PropuestaResponseDTO> getPropuestasPendientes() {
+        List<PropuestaElemento> propuestas = propuestaRepo.findByEstadoPropuesta(EstadoPropuesta.PENDIENTE);
+
+        // Mapeamos (convertimos) la List<PropuestaElemento> a List<PropuestaResponseDTO>
+        return propuestas.stream()
+                .map(PropuestaResponseDTO::new)
+                .collect(Collectors.toList());
     }
 
 
@@ -84,7 +92,7 @@ public class PropuestaElementoService {
      * @return El nuevo Elemento creado.
      */
     @Transactional // Asegura que si algo falla, no se guarde nada
-    public Elemento aprobarPropuesta(Long propuestaId, Long revisorId) throws Exception {
+    public ElementoResponseDTO aprobarPropuesta(Long propuestaId, Long revisorId) throws Exception {
         
         // 1. Buscar al moderador (revisor)
         Usuario revisor = usuarioRepo.findById(revisorId)
@@ -158,7 +166,8 @@ public class PropuestaElementoService {
         propuestaRepo.save(propuesta);
 
         // 6. Guardar el nuevo elemento en la tabla principal
-        return elementoRepo.save(nuevoElemento);
+        Elemento elementoGuardado = elementoRepo.save(nuevoElemento);
+        return new ElementoResponseDTO(elementoGuardado); // Devuelve el DTO
     }
     
     // (Añadiremos rechazarPropuesta() más tarde)

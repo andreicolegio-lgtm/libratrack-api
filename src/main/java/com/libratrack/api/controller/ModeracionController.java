@@ -2,6 +2,8 @@ package com.libratrack.api.controller;
 
 import com.libratrack.api.entity.Elemento;
 import com.libratrack.api.entity.PropuestaElemento;
+import com.libratrack.api.entity.Usuario;
+import com.libratrack.api.repository.UsuarioRepository;
 import com.libratrack.api.service.PropuestaElementoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,9 @@ public class ModeracionController {
 
     @Autowired
     private PropuestaElementoService propuestaService;
+
+    @Autowired
+    private UsuarioRepository usuarioRepo;
 
     /**
      * Endpoint para obtener la cola de propuestas pendientes (RF14).
@@ -35,18 +40,22 @@ public class ModeracionController {
      */
     @PostMapping("/aprobar/{propuestaId}")
     public ResponseEntity<?> aprobarPropuesta(@PathVariable Long propuestaId, Principal principal) {
-        // Obtenemos el ID del moderador desde el token
-        String revisorUsername = principal.getName();
-        
-        // TO DO: Necesitamos buscar el ID del usuario a partir del username.
-        // Por ahora, simulamos con el ID 1.
-        Long revisorId = 1L; // <-- ESTO ES TEMPORAL
 
         try {
+            // Obtenemos el nombre del moderador desde el token
+            String revisorUsername = principal.getName();
+
+            // Buscamos al moderador en la BD
+            Usuario revisor = usuarioRepo.findByUsername(revisorUsername)
+                    .orElseThrow(() -> new Exception("Token de revisor inválido."));
+
+            // ¡Usamos el ID real!
+            Long revisorId = revisor.getId(); 
+
             Elemento nuevoElemento = propuestaService.aprobarPropuesta(propuestaId, revisorId);
             return ResponseEntity.ok(nuevoElemento);
         } catch (Exception e) {
-            // (Manejo de errores... por ahora incompleto)
+            // Manejo de errores
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

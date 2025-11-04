@@ -2,18 +2,24 @@ package com.libratrack.api.service;
 
 import com.libratrack.api.dto.PropuestaRequestDTO;
 import com.libratrack.api.entity.Elemento;
+import com.libratrack.api.entity.Genero;
 import com.libratrack.api.entity.PropuestaElemento;
+import com.libratrack.api.entity.Tipo;
 import com.libratrack.api.entity.Usuario;
 import com.libratrack.api.model.EstadoContenido;
 import com.libratrack.api.model.EstadoPropuesta;
 import com.libratrack.api.repository.ElementoRepository;
+import com.libratrack.api.repository.GeneroRepository;
 import com.libratrack.api.repository.PropuestaElementoRepository;
+import com.libratrack.api.repository.TipoRepository;
 import com.libratrack.api.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // ¡Importante!
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class PropuestaElementoService {
@@ -27,7 +33,11 @@ public class PropuestaElementoService {
     @Autowired
     private ElementoRepository elementoRepo;
 
-    // (Más adelante inyectaremos TipoRepo y GeneroRepo para la aprobación)
+    @Autowired
+    private TipoRepository tipoRepository;
+
+    @Autowired
+    private GeneroRepository generoRepository;
 
     /**
      * Crea una nueva propuesta y la añade a la cola de moderación (RF13).
@@ -66,19 +76,20 @@ public class PropuestaElementoService {
 
     /**
      * Aprueba una propuesta (RF15).
-     * Esto copia los datos de la propuesta a la tabla 'elementos'.
+     * Esto "traduce" los strings de la propuesta, busca o crea las entidades
+     * Tipo/Genero, y copia los datos a la tabla 'elementos'.
      *
      * @param propuestaId El ID de la propuesta a aprobar.
      * @param revisorId El ID del moderador (del token JWT) que aprueba.
      * @return El nuevo Elemento creado.
      */
-    @Transactional // Esta anotación asegura que si algo falla, no se guarde nada (evita corrupción)
+    @Transactional // Asegura que si algo falla, no se guarde nada
     public Elemento aprobarPropuesta(Long propuestaId, Long revisorId) throws Exception {
         
         // 1. Buscar al moderador (revisor)
         Usuario revisor = usuarioRepo.findById(revisorId)
                 .orElseThrow(() -> new Exception("Usuario revisor no encontrado."));
-        // (Aquí podríamos verificar si el revisor tiene rol de MODERADOR)
+        // TO DO: Validar que el revisor tiene rol "ROLE_MODERADOR"
 
         // 2. Buscar la propuesta
         PropuestaElemento propuesta = propuestaRepo.findById(propuestaId)
@@ -88,40 +99,66 @@ public class PropuestaElementoService {
             throw new Exception("Esta propuesta ya ha sido gestionada.");
         }
 
-        // 3. Crear el nuevo Elemento con los datos de la propuesta
-        // (¡Aquí es donde necesitamos la lógica para buscar Tipo y Genero!)
-        // --- INICIO DE LÓGICA COMPLEJA (Simplificada por ahora) ---
+        // 3. --- INICIO DE LA LÓGICA DE "TRADUCCIÓN" ---
+
+        // 3a. Traducir el TIPO (Buscar o Crear)
+        String tipoSugerido = propuesta.getTipoSugerido();
+        if (tipoSugerido == null || tipoSugerido.isBlank()) {
+            throw new Exception("El Tipo sugerido no puede estar vacío.");
+        }
+        Tipo tipoFinal = tipoRepository.findByNombre(tipoSugerido)
+                .orElseGet(() -> {
+                    // No existe, así que lo creamos
+                    return tipoRepository.save(new Tipo(tipoSugerido));
+                });
+
+        // 3b. Traducir los GÉNEROS (Buscar o Crear)
+        Set<Genero> generosFinales = new HashSet<>();
+        String generosSugeridosString = propuesta.getGenerosSugeridos();
+        if (generosSugeridosString == null || generosSugeridosString.isBlank()) {
+            throw new Exception("Los Géneros sugeridos no pueden estar vacíos.");
+        }
         
-        // TO DO: Necesitamos buscar Tipo y Genero por los strings.
-        // Por ahora, asumimos que se copian los datos y se asigna un Tipo y Genero por defecto.
-        // Esto lo arreglaremos después.
+        // Asumimos que los géneros vienen separados por coma (ej. "Aventuras, Fantasía")
+        String[] generosSugeridos = generosSugeridosString.split("\\s*,\\s*"); // Separa por comas
         
+        for (String nombreGenero : generosSugeridos) {
+            if (nombreGenero.isBlank()) continue; // Ignora géneros vacíos si hay comas extra
+            
+            Genero genero = generoRepository.findByNombre(nombreGenero)
+                    .orElseGet(() -> {
+                        // No existe, lo creamos
+                        return generoRepository.save(new Genero(nombreGenero));
+                    });
+            generosFinales.add(genero);
+        }
+        
+        if (generosFinales.isEmpty()) {
+             throw new Exception("Se debe proporcionar al menos un género válido.");
+        }
+
+        // --- FIN DE LA LÓGICA DE "TRADUCCIÓN" ---
+
+        // 4. Crear el nuevo Elemento con los datos "traducidos"
         Elemento nuevoElemento = new Elemento();
         nuevoElemento.setTitulo(propuesta.getTituloSugerido());
         nuevoElemento.setDescripcion(propuesta.getDescripcionSugerida());
+        nuevoElemento.setCreador(propuesta.getProponente()); // Asignamos el proponente original
         
-        // Asignamos el proponente original
-        nuevoElemento.setCreador(propuesta.getProponente());
+        // Asignamos las entidades "traducidas"
+        nuevoElemento.setTipo(tipoFinal);
+        nuevoElemento.setGeneros(generosFinales);
         
-        // (RF16) El contenido aprobado por un moderador se marca como COMUNITARIO
+        // (RF16) El contenido aprobado se marca como COMUNITARIO por defecto
         nuevoElemento.setEstadoContenido(EstadoContenido.COMUNITARIO);
-        
-        // --- FIN DE LÓGICA COMPLEJA ---
-        
-        // 4. Actualizar la propuesta como "APROBADA"
+
+        // 5. Actualizar la propuesta como "APROBADA"
         propuesta.setEstadoPropuesta(EstadoPropuesta.APROBADO);
         propuesta.setRevisor(revisor);
-        propuestaRepo.save(propuesta); // Guardamos el cambio en la propuesta
+        propuestaRepo.save(propuesta);
 
-        // 5. Guardar el nuevo elemento en la tabla principal
-        // (Devolvemos el elemento creado)
-        // **ERROR**: ¡Aún no hemos asignado Tipo y Generos! (Lo haremos en el siguiente paso)
-        
-        // --- Temporalmente, guardaremos el elemento incompleto ---
-        // return elementoRepo.save(nuevoElemento);
-        
-        // --- Por ahora, solo devolvemos null para evitar errores ---
-        return null; // <-- ARREGLAREMOS ESTO
+        // 6. Guardar el nuevo elemento en la tabla principal
+        return elementoRepo.save(nuevoElemento);
     }
     
     // (Añadiremos rechazarPropuesta() más tarde)

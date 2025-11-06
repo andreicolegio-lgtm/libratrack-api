@@ -99,17 +99,25 @@ public class ElementoService {
     }
 
     /**
-     * Busca todos los elementos en la base de datos (RF09 - Búsqueda Global).
+     * Busca todos los elementos o filtra por un término de búsqueda (RF09).
      *
-     * @return Una lista de DTOs de todos los Elementos.
+     * @param searchText El término de búsqueda opcional (por título).
+     * @return Una lista de DTOs de los Elementos que cumplen con el criterio.
      */
-    public List<ElementoResponseDTO> findAllElementos() {
-        List<Elemento> elementos = elementoRepository.findAll();
-        
-        // Mapea la lista de Entidades (Elemento) a una lista de DTOs (ElementoResponseDTO)
-        // Esto evita el error LazyInitializationException.
+    public List<ElementoResponseDTO> findAllElementos(String searchText) {
+        List<Elemento> elementos;
+
+        if (searchText != null && !searchText.isEmpty()) {
+            // Si hay término de búsqueda, usa el método mágico del repositorio
+            elementos = elementoRepository.findByTituloContainingIgnoreCase(searchText);
+        } else {
+            // Si no hay término de búsqueda, devuelve todos (el comportamiento por defecto)
+            elementos = elementoRepository.findAll();
+        }
+
+        // Mapea la lista de Entidades a una lista de DTOs
         return elementos.stream()
-                .map(ElementoResponseDTO::new) // Usa el constructor del DTO
+                .map(ElementoResponseDTO::new)
                 .collect(Collectors.toList());
     }
 

@@ -1,6 +1,7 @@
 package com.libratrack.api.repository;
 
 import com.libratrack.api.entity.Elemento;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -28,4 +29,14 @@ public interface ElementoRepository extends JpaRepository<Elemento, Long> {
     // y devolvería los resultados paginados).
     //
     // Por ahora, el 'findAll()' básico es suficiente.
+
+    /**
+     * Busca Elementos cuyo título contenga el término de búsqueda.
+     * Spring traduce esto a: "SELECT * FROM elementos WHERE titulo LIKE %?%"
+     * Implementa la búsqueda por título para RF09.
+     *
+     * @param titulo El texto a buscar.
+     * @return Una lista de Elementos que cumplen con el criterio.
+     */
+    List<Elemento> findByTituloContainingIgnoreCase(String titulo);
 }

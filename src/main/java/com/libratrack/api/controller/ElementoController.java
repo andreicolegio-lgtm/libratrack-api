@@ -24,21 +24,19 @@ public class ElementoController {
     private ElementoService elementoService;
 
     /**
-     * Endpoint para obtener todos los elementos (RF09: Búsqueda Global).
-     * Escucha en: GET /api/elementos
+     * Endpoint para obtener todos los elementos o para buscar por título (RF09).
+     * Escucha en: GET /api/elementos?search=texto
      *
-     * Seguridad:
-     * @PreAuthorize("hasAuthority('ROLE_USER')") asegura que solo los usuarios
-     * autenticados (con un token JWT válido que les da la autoridad 'ROLE_USER')
-     * pueden acceder a esta ruta. Si no, devuelve 403 Forbidden.
-     *
+     * @param searchText El parámetro de búsqueda (opcional) de la URL (@RequestParam).
      * @return ResponseEntity con una Lista de DTOs de los elementos (200 OK).
      */
     @PreAuthorize("hasAuthority('ROLE_USER')")
     @GetMapping
-    public ResponseEntity<List<ElementoResponseDTO>> getAllElementos() {
-        // Llama al servicio, que ya devuelve una lista de DTOs (código limpio)
-        List<ElementoResponseDTO> elementos = elementoService.findAllElementos();
+    public ResponseEntity<List<ElementoResponseDTO>> getAllElementos(
+            @RequestParam(required = false) String searchText) {
+
+        // Llama al servicio, pasándole el parámetro de búsqueda
+        List<ElementoResponseDTO> elementos = elementoService.findAllElementos(searchText);
         return ResponseEntity.ok(elementos); // Devuelve 200 OK
     }
 

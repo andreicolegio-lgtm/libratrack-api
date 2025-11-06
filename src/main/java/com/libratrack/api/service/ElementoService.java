@@ -23,8 +23,6 @@ import java.util.stream.Collectors;
 
 /**
  * Servicio para la lógica de negocio relacionada con la entidad Elemento.
- * Gestiona la creación y recuperación de los elementos del catálogo principal.
- * Implementa RF09, RF10, RF13, RF15.
  */
 @Service
 public class ElementoService {
@@ -41,14 +39,10 @@ public class ElementoService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    // ... (createElemento sin cambios) ...
 
-    /**
-     * Lógica de negocio para crear un nuevo Elemento a partir de un DTO.
-     * [Preservado]
-     */
     @Transactional 
     public ElementoResponseDTO createElemento(ElementoDTO dto) throws Exception {
-        // [Contenido de createElemento sin cambios]
         Tipo tipo = tipoRepository.findById(dto.getTipoId())
                 .orElseThrow(() -> new Exception("Tipo no encontrado con id: " + dto.getTipoId()));
 
@@ -77,9 +71,8 @@ public class ElementoService {
     }
 
     /**
-     * NUEVO REFACTORIZADO: Busca todos los elementos o filtra por 3 criterios (RF09).
-     *
-     * @param searchText El término de búsqueda opcional (por título).
+     * REFACTORIZADO: Busca todos los elementos o filtra por 3 criterios (RF09).
+     * * @param searchText El término de búsqueda opcional (por título).
      * @param tipoName El nombre del Tipo para filtrar (ej. "Serie").
      * @param generoName El nombre del Género para filtrar (ej. "Fantasía").
      * @return Una lista de DTOs de los Elementos que cumplen con los criterios.
@@ -88,40 +81,37 @@ public class ElementoService {
         
         // 1. Obtener TODOS los elementos de forma inicial
         List<Elemento> elementos = elementoRepository.findAll();
-        
-        // 2. Usar un Stream para aplicar los 3 filtros secuencialmente
-        // Esto permite la combinación de filtros (AND lógico)
         if (elementos.isEmpty()) {
              return List.of();
         }
         
+        // 2. Aplicar los 3 filtros secuencialmente (AND lógico)
         List<Elemento> elementosFiltrados = elementos.stream()
             
-            // Filtro por Búsqueda (Título)
+            // Filtro 1: Búsqueda por Título (searchText)
             .filter(e -> {
                 if (searchText != null && !searchText.isBlank()) {
                     return e.getTitulo().toLowerCase().contains(searchText.toLowerCase());
                 }
-                return true; // Si no hay búsqueda, no filtra por título
+                return true;
             })
             
-            // Filtro por Tipo (ej. "Serie")
+            // Filtro 2: Por Tipo (tipoName)
             .filter(e -> {
-                if (tipoName != null && !tipoName.isBlank()) {
-                    // Compara el nombre del Tipo del Elemento con el filtro
+                if (tipoName != null && !tipoName.isBlank() && e.getTipo() != null) {
                     return e.getTipo().getNombre().equalsIgnoreCase(tipoName);
                 }
-                return true; // Si no hay filtro de tipo, no filtra
+                return true;
             })
             
-            // Filtro por Género (ej. "Fantasía")
+            // Filtro 3: Por Género (generoName)
             .filter(e -> {
-                if (generoName != null && !generoName.isBlank()) {
-                    // Comprueba si CUALQUIERA de los géneros del Elemento coincide con el filtro
+                if (generoName != null && !generoName.isBlank() && e.getGeneros() != null) {
+                    // Comprueba si CUALQUIERA de los géneros del Elemento coincide
                     return e.getGeneros().stream()
                             .anyMatch(g -> g.getNombre().equalsIgnoreCase(generoName));
                 }
-                return true; // Si no hay filtro de género, no filtra
+                return true;
             })
             
             .collect(Collectors.toList());

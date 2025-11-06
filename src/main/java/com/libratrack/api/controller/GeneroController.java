@@ -22,22 +22,6 @@ public class GeneroController {
     @Autowired
     private GeneroService generoService;
 
-    // --- NUEVO ENDPOINT PÚBLICO (RF09) ---
-    /**
-     * Endpoint para que CUALQUIER usuario autenticado obtenga la lista de Géneros.
-     * Escucha en: GET /api/generos
-     *
-     * Nota: La ruta de la clase ha sido ignorada, y la seguridad
-     * es más relajada que la de la clase.
-     */
-    @GetMapping("/api/generos") // Nueva ruta base para la consulta de usuarios
-    @PreAuthorize("isAuthenticated()") // Acceso para CUALQUIER usuario logueado
-    public ResponseEntity<List<Genero>> getGenerosParaCatalogo() {
-        // Llama al mismo servicio que ya tienes
-        return ResponseEntity.ok(generoService.getAllGeneros());
-    }
-    // --- FIN DEL NUEVO ENDPOINT ---
-
     /**
      * Endpoint para obtener todos los Géneros existentes (ADMIN).
      * Escucha en: GET /api/admin/generos

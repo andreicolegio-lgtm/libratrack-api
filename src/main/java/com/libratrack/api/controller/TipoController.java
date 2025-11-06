@@ -21,22 +21,6 @@ public class TipoController {
 
     @Autowired
     private TipoService tipoService;
-    
-    // --- NUEVO ENDPOINT PÚBLICO (RF09) ---
-    /**
-     * Endpoint para que CUALQUIER usuario autenticado obtenga la lista de Tipos.
-     * Escucha en: GET /api/tipos
-     *
-     * Nota: La ruta de la clase ha sido ignorada, y la seguridad
-     * es más relajada que la de la clase.
-     */
-    @GetMapping("/api/tipos") // Nueva ruta base para la consulta de usuarios
-    @PreAuthorize("isAuthenticated()") // Acceso para CUALQUIER usuario logueado
-    public ResponseEntity<List<Tipo>> getTiposParaCatalogo() {
-        // Llama al mismo servicio que ya tienes
-        return ResponseEntity.ok(tipoService.getAllTipos()); 
-    }
-    // --- FIN DEL NUEVO ENDPOINT ---
 
     /**
      * Endpoint para obtener todos los Tipos existentes (ADMIN).

@@ -1,17 +1,14 @@
 package com.libratrack.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
-import java.util.List;
 
 /**
  * DTO para RECIBIR una propuesta de Elemento del cliente (RF13).
  */
 public class PropuestaRequestDTO {
 
-    // --- Campos Requeridos del Elemento ---
+    // --- Campos de Elemento ---
 
     @NotBlank(message = "El título sugerido no puede estar vacío")
     @Size(max = 255, message = "El título sugerido no puede exceder los 255 caracteres")
@@ -21,20 +18,16 @@ public class PropuestaRequestDTO {
     @Size(max = 5000, message = "La descripción sugerida no puede exceder los 5000 caracteres")
     private String descripcionSugerida;
     
-    // --- Campos de Relación ---
+    // --- Campos de Tipo/Género (EXPECTED BY SERVICE) ---
     
-    @NotNull(message = "El ID del Tipo no puede ser nulo")
-    private Long tipoIdSugerido;
+    @NotBlank(message = "El tipo sugerido no puede ser nulo")
+    private String tipoSugerido; // <-- ¡ESTO SOLUCIONA EL ERROR!
+    
+    @NotBlank(message = "Los géneros sugeridos no pueden ser nulos")
+    private String generosSugeridos; // <-- ¡ESTO SOLUCIONA EL ERROR!
 
-    @NotNull(message = "La lista de IDs de Géneros no puede ser nula")
-    private List<Long> generoIdsSugeridos;
-
-    // --- Campo de Multimedia (NUEVO) ---
-    /**
-     * URL de la imagen de portada sugerida para el Elemento. (RF13)
-     */
-    private String imagenPortadaUrl; // <--- ¡AÑADIDO AQUÍ!
-
+    // --- Campo de Multimedia ---
+    private String imagenPortadaUrl; 
     
     // --- Getters y Setters ---
 
@@ -54,23 +47,25 @@ public class PropuestaRequestDTO {
         this.descripcionSugerida = descripcionSugerida;
     }
 
-    public Long getTipoIdSugerido() {
-        return tipoIdSugerido;
+    // --- Getters y Setters que solucionan el error ---
+    public String getTipoSugerido() {
+        return tipoSugerido;
     }
 
-    public void setTipoIdSugerido(Long tipoIdSugerido) {
-        this.tipoIdSugerido = tipoIdSugerido;
+    public void setTipoSugerido(String tipoSugerido) {
+        this.tipoSugerido = tipoSugerido;
     }
 
-    public List<Long> getGeneroIdsSugeridos() {
-        return generoIdsSugeridos;
+    public String getGenerosSugeridos() {
+        return generosSugeridos;
     }
 
-    public void setGeneroIdsSugeridos(List<Long> generoIdsSugeridos) {
-        this.generoIdsSugeridos = generoIdsSugeridos;
+    public void setGenerosSugeridos(String generosSugeridos) {
+        this.generosSugeridos = generosSugeridos;
     }
-
-    // --- Getter y Setter para la URL de la imagen (NUEVO) ---
+    
+    // --- Getter y Setter para la URL de la imagen ---
+    
     public String getImagenPortadaUrl() {
         return imagenPortadaUrl;
     }

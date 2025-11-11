@@ -1,24 +1,16 @@
 package com.libratrack.api.dto;
 
-import com.libratrack.api.entity.PropuestaElemento; // Importa la entidad
-import com.libratrack.api.model.EstadoPropuesta; // Importa el Enum
+import com.libratrack.api.entity.PropuestaElemento; 
+import com.libratrack.api.model.EstadoPropuesta; 
 import java.time.LocalDateTime;
 
 /**
  * DTO (Data Transfer Object) para la RESPUESTA al ENVIAR una Propuesta.
- *
- * Esta clase es crucial para la estabilidad de la API.
- * Su propósito es "aplanar" la entidad 'PropuestaElemento', convirtiendo
- * las relaciones complejas (objetos 'Usuario' para proponente y revisor)
- * en datos simples (sus 'username' como Strings).
- *
- * Esto soluciona la 'LazyInitializationException' (Error 500/403)
- * que ocurre al intentar devolver la entidad 'PropuestaElemento' (con
- * relaciones LAZY) directamente desde el ModeracionController.
+ * --- ¡ACTUALIZADO (Sprint 2 / V2)! ---
  */
 public class PropuestaResponseDTO {
 
-    // --- Campos de Datos Primitivos ---
+    // ... (Campos básicos: id, titulo, desc, etc. sin cambios) ...
     private Long id;
     private String tituloSugerido;
     private String descripcionSugerida;
@@ -28,31 +20,19 @@ public class PropuestaResponseDTO {
     private String comentariosRevision;
     private LocalDateTime fechaPropuesta;
 
-    // --- Relaciones Aplanadas ---
-    
-    /**
-     * El nombre de usuario del 'proponente'.
-     * (Aplanado desde la entidad 'Usuario' relacionada).
-     */
-    private String proponenteUsername;
-    
-    /**
-     * El nombre de usuario del 'revisor' (Moderador).
-     * Este campo será 'null' si la propuesta aún está PENDIENTE.
-     */
-    private String revisorUsername;
+    // --- ¡CAMPOS DE PROGRESO REFACTORIZADOS! (Petición b, c, d) ---
+    private String episodiosPorTemporada;
+    private Integer totalUnidades;
+    private Integer totalCapitulosLibro;
+    private Integer totalPaginasLibro;
+    // (Ya no necesitamos enviar 'esUnidadUnica' porque el 'Tipo' lo define)
 
+    // --- Relaciones Aplanadas ---
+    private String proponenteUsername;
+    private String revisorUsername;
     
     // --- Constructor de Mapeo ---
-
-    /**
-     * Constructor especial que sabe cómo "mapear" (convertir)
-     * una entidad 'PropuestaElemento' (de la BD) a este DTO (para la respuesta JSON).
-     *
-     * @param p La entidad 'PropuestaElemento' leída de la base de datos.
-     */
     public PropuestaResponseDTO(PropuestaElemento p) {
-        // Mapeo 1 a 1 de campos simples
         this.id = p.getId();
         this.tituloSugerido = p.getTituloSugerido();
         this.descripcionSugerida = p.getDescripcionSugerida();
@@ -62,25 +42,24 @@ public class PropuestaResponseDTO {
         this.comentariosRevision = p.getComentariosRevision();
         this.fechaPropuesta = p.getFechaPropuesta();
 
+        // --- ¡NUEVO MAPEO DE PROGRESO! (Refactorizado) ---
+        this.episodiosPorTemporada = p.getEpisodiosPorTemporada();
+        this.totalUnidades = p.getTotalUnidades();
+        this.totalCapitulosLibro = p.getTotalCapitulosLibro();
+        this.totalPaginasLibro = p.getTotalPaginasLibro();
+
         // Mapeo Seguro (Aplanado) de Relaciones LAZY
-        
-        // 1. Aplanar Proponente (siempre existe)
         this.proponenteUsername = p.getProponente().getUsername();
-        
-        // 2. Aplanar Revisor (con comprobación de nulo)
-        // El revisor es nulo hasta que la propuesta se aprueba o rechaza.
         if (p.getRevisor() != null) {
             this.revisorUsername = p.getRevisor().getUsername();
         } else {
-            this.revisorUsername = null; // Explícitamente nulo
+            this.revisorUsername = null; 
         }
     }
 
     
     // --- Getters ---
-    // Necesarios para que Spring/Jackson pueda leer los valores
-    // y construir el JSON de respuesta.
-
+    // (Jackson los necesita para construir el JSON)
     public Long getId() { return id; }
     public String getTituloSugerido() { return tituloSugerido; }
     public String getDescripcionSugerida() { return descripcionSugerida; }
@@ -91,4 +70,10 @@ public class PropuestaResponseDTO {
     public LocalDateTime getFechaPropuesta() { return fechaPropuesta; }
     public String getProponenteUsername() { return proponenteUsername; }
     public String getRevisorUsername() { return revisorUsername; }
+    
+    // Getters de Progreso
+    public String getEpisodiosPorTemporada() { return episodiosPorTemporada; }
+    public Integer getTotalUnidades() { return totalUnidades; }
+    public Integer getTotalCapitulosLibro() { return totalCapitulosLibro; }
+    public Integer getTotalPaginasLibro() { return totalPaginasLibro; }
 }

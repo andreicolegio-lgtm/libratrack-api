@@ -9,7 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.*; // Asegúrate de que GetMapping esté importado
 
 import java.security.Principal;
 
@@ -24,7 +24,21 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
-    // ... (getMiPerfil sin cambios)
+    // --- ¡MÉTODO AÑADIDO! ---
+    /**
+     * Endpoint para obtener el perfil del usuario autenticado (GET /api/usuarios/me).
+     * Este es el método que faltaba y que el ProfileScreen de Flutter necesita.
+     */
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UsuarioResponseDTO> getMiPerfil(Principal principal) {
+        String username = principal.getName();
+        // El servicio ya tiene la lógica para esto (RF04)
+        UsuarioResponseDTO perfil = usuarioService.getMiPerfil(username);
+        return ResponseEntity.ok(perfil);
+    }
+    // --- FIN DEL MÉTODO AÑADIDO ---
+
 
     /**
      * Endpoint para actualizar el username del usuario (PUT /api/usuarios/me).

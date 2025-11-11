@@ -4,39 +4,48 @@ import com.libratrack.api.entity.Elemento;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+// NUEVAS IMPORTACIONES
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-// (Podríamos añadir 'org.springframework.data.domain.Page' y 'Pageable'
-// si quisiéramos implementar paginación en el futuro).
-
-/**
- * Repositorio para la entidad Elemento.
- * Extiende JpaRepository, dándonos métodos CRUD (Create, Read, Update, Delete)
- * listos para usar, como:
- * - save(elemento): Guarda o actualiza un elemento.
- * - findById(id): Busca un elemento por su ID (usado para RF10).
- * - findAll(): Busca todos los elementos (usado para RF09).
- * - deleteById(id): Borra un elemento.
- */
 @Repository
 public interface ElementoRepository extends JpaRepository<Elemento, Long> {
     
-    // --- Métodos Mágicos (Query Methods) ---
-    // En el futuro, si quisiéramos una búsqueda más avanzada (RF09),
-    // podríamos añadir métodos mágicos aquí, por ejemplo:
-    //
-    // Page<Elemento> findByTituloContaining(String titulo, Pageable pageable);
-    // (Esto buscaría elementos cuyo título 'contenga' el texto de búsqueda
-    // y devolvería los resultados paginados).
-    //
-    // Por ahora, el 'findAll()' básico es suficiente.
-
-    /**
-     * Busca Elementos cuyo título contenga el término de búsqueda.
-     * Spring traduce esto a: "SELECT * FROM elementos WHERE titulo LIKE %?%"
-     * Implementa la búsqueda por título para RF09.
-     *
-     * @param titulo El texto a buscar.
-     * @return Una lista de Elementos que cumplen con el criterio.
-     */
+    // --- MÉTODO ANTIGUO (Lo dejamos por si lo usa otro servicio) ---
     List<Elemento> findByTituloContainingIgnoreCase(String titulo);
+
+    // --- NUEVO MÉTODO DE BÚSQUEDA PAGINADO ---
+    /**
+     * Busca elementos filtrando por todos los criterios y devuelve un resultado paginado.
+     * Esta consulta es la implementación de rendimiento de RF09.
+     *
+     * @param searchText Texto a buscar en el título (ignora mayúsculas/minúsculas).
+     * @param tipoName Nombre del Tipo a filtrar.
+     * @param generoName Nombre del Género a filtrar.
+     * @param pageable Objeto de Spring que contiene la información de paginación (page, size).
+     * @return Una 'Page' (página) de Elementos que coinciden.
+     */
+    @Query("SELECT e FROM Elemento e " +
+           "LEFT JOIN e.tipo t " +
+           "LEFT JOIN e.generos g " +
+           "WHERE " +
+           // 1. Filtro de Título (searchText)
+           // COALESCE evita un error si el parámetro es null
+           "(LOWER(e.titulo) LIKE LOWER(CONCAT('%', COALESCE(:searchText, ''), '%'))) " +
+           
+           // 2. Filtro de Tipo (tipoName)
+           "AND (:tipoName IS NULL OR t.nombre = :tipoName) " +
+           
+           // 3. Filtro de Género (generoName)
+           "AND (:generoName IS NULL OR g.nombre = :generoName) " +
+           
+           // Agrupamos para evitar duplicados si un elemento tiene múltiples géneros
+           "GROUP BY e.id") 
+    Page<Elemento> findElementosByFiltros(
+            @Param("searchText") String searchText, 
+            @Param("tipoName") String tipoName, 
+            @Param("generoName") String generoName, 
+            Pageable pageable);
 }

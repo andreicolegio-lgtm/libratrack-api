@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List; // <-- ¡ASEGÚRATE DE QUE ESTÉ IMPORTADO!
 
 /**
  * Controlador REST para la gestión de Reseñas (RF12).
@@ -25,7 +26,23 @@ public class ResenaController {
     @Autowired
     private ResenaService resenaService;
 
-    // ... (getResenasDelElemento sin cambios)
+    // --- ¡MÉTODO AÑADIDO! ---
+    /**
+     * Endpoint para obtener todas las reseñas de un elemento (GET /api/resenas/elemento/{id}).
+     * Este es el método que faltaba y que el ElementoDetailScreen de Flutter necesita.
+     *
+     * @param elementoId El ID del elemento del cual se quieren las reseñas.
+     */
+    @GetMapping("/elemento/{elementoId}")
+    public ResponseEntity<List<ResenaResponseDTO>> getResenasDelElemento(@PathVariable Long elementoId) {
+        
+        // 1. Llama al servicio (si falla, el GlobalExceptionHandler se encarga)
+        List<ResenaResponseDTO> resenas = resenaService.getResenasByElementoId(elementoId);
+        
+        return ResponseEntity.ok(resenas); // 200 OK
+    }
+    // --- FIN DEL MÉTODO AÑADIDO ---
+
 
     /**
      * Endpoint para crear una nueva reseña (RF12).

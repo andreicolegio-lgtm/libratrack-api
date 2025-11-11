@@ -27,17 +27,28 @@ public class CatalogoPersonal {
     @Column(nullable = false)
     private LocalDateTime agregadoEn;
 
-    // --- CAMPOS REEMPLAZADOS/MODIFICADOS (Punto 6) ---
+    // --- CAMPOS DE PROGRESO (Punto 5) ---
     
     /**
-     * Temporada actual en la que se encuentra el usuario.
+     * Temporada actual (para Series).
      */
     private Integer temporadaActual; 
 
     /**
-     * Episodio/Capítulo/Página actual en la que se encuentra el usuario.
+     * Episodio/Capítulo actual (para Series, Anime, Manga).
      */
     private Integer unidadActual;
+
+    // --- ¡NUEVOS CAMPOS! (Sprint 2) ---
+    /**
+     * Capítulo actual (para Libros).
+     */
+    private Integer capituloActual;
+    
+    /**
+     * Página actual (para Libros).
+     */
+    private Integer paginaActual;
 
     // --- Constructores y Lifecycle Callbacks ---
     
@@ -45,17 +56,20 @@ public class CatalogoPersonal {
         // Inicializar progreso a 0/1 por defecto (si no es persistido)
         this.temporadaActual = 1;
         this.unidadActual = 0;
+        this.capituloActual = 0; // <-- NUEVO
+        this.paginaActual = 0;   // <-- NUEVO
     }
     
     @PrePersist
     protected void onCreate() {
-        // Inicializar hora si no está
         if (agregadoEn == null) {
             agregadoEn = LocalDateTime.now();
         }
         // Inicializar progreso si no se establece
         if (this.temporadaActual == null) { this.temporadaActual = 1; }
         if (this.unidadActual == null) { this.unidadActual = 0; }
+        if (this.capituloActual == null) { this.capituloActual = 0; } // <-- NUEVO
+        if (this.paginaActual == null) { this.paginaActual = 0; }     // <-- NUEVO
     }
 
     // --- Getters y Setters ---
@@ -71,9 +85,14 @@ public class CatalogoPersonal {
     public LocalDateTime getAgregadoEn() { return agregadoEn; }
     public void setAgregadoEn(LocalDateTime agregadoEn) { this.agregadoEn = agregadoEn; }
     
-    // Getters y Setters de Progreso Actual
+    // Getters y Setters de Progreso (Existentes y Nuevos)
     public Integer getTemporadaActual() { return temporadaActual; }
     public void setTemporadaActual(Integer temporadaActual) { this.temporadaActual = temporadaActual; }
     public Integer getUnidadActual() { return unidadActual; }
     public void setUnidadActual(Integer unidadActual) { this.unidadActual = unidadActual; }
+    
+    public Integer getCapituloActual() { return capituloActual; }
+    public void setCapituloActual(Integer capituloActual) { this.capituloActual = capituloActual; }
+    public Integer getPaginaActual() { return paginaActual; }
+    public void setPaginaActual(Integer paginaActual) { this.paginaActual = paginaActual; }
 }

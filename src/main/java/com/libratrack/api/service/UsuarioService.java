@@ -2,20 +2,31 @@
 package com.libratrack.api.service;
 
 import com.libratrack.api.dto.PasswordChangeDTO;
+import com.libratrack.api.dto.RolUpdateDTO; 
 import com.libratrack.api.dto.UsuarioResponseDTO;
 import com.libratrack.api.dto.UsuarioUpdateDTO;
 import com.libratrack.api.entity.Usuario;
 import com.libratrack.api.exception.ConflictException; 
 import com.libratrack.api.exception.ResourceNotFoundException; 
 import com.libratrack.api.repository.UsuarioRepository;
+
+// --- ¡NUEVAS IMPORTACIONES! ---
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
+// ---
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList; // <-- ¡NUEVA IMPORTACIÓN!
+import java.util.List; 
 import java.util.Optional;
 
 /**
- * --- ¡ACTUALIZADO (Sprint 3)! ---
+ * --- ¡ACTUALIZADO (Sprint 7)! ---
  */
 @Service
 public class UsuarioService {
@@ -26,8 +37,9 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public Usuario registrarUsuario(Usuario nuevoUsuario) { 
-        // ... (código sin cambios)
+    // ... (registrarUsuario, getMiPerfil, updateMiPerfil, changePassword, updateFotoPerfil ... sin cambios) ...
+    @Transactional 
+    public UsuarioResponseDTO registrarUsuario(Usuario nuevoUsuario) { 
         if (usuarioRepository.existsByUsername(nuevoUsuario.getUsername())) {
             throw new ConflictException("El nombre de usuario ya existe"); 
         }
@@ -36,14 +48,14 @@ public class UsuarioService {
         }
         String passCifrada = passwordEncoder.encode(nuevoUsuario.getPassword());
         nuevoUsuario.setPassword(passCifrada);
-        return usuarioRepository.save(nuevoUsuario);
+        nuevoUsuario.setEsModerador(false);
+        nuevoUsuario.setEsAdministrador(false);
+        Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
+        return new UsuarioResponseDTO(usuarioGuardado); 
     }
     
-    
-    // --- MÉTODOS DE GESTIÓN DE PERFIL (RF04) ---
-
+    @Transactional(readOnly = true) 
     public UsuarioResponseDTO getMiPerfil(String username) {
-        // ... (código sin cambios)
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con el token: " + username));
         return new UsuarioResponseDTO(usuario);
@@ -51,7 +63,6 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponseDTO updateMiPerfil(String usernameActual, UsuarioUpdateDTO updateDto) { 
-        // ... (código sin cambios)
         Usuario usuarioActual = usuarioRepository.findByUsername(usernameActual)
                 .orElseThrow(() -> new ResourceNotFoundException("Token de usuario inválido.")); 
         String nuevoUsername = updateDto.getUsername().trim();
@@ -69,7 +80,6 @@ public class UsuarioService {
 
     @Transactional
     public void changePassword(String usernameActual, PasswordChangeDTO passwordDto) { 
-        // ... (código sin cambios)
         Usuario usuarioActual = usuarioRepository.findByUsername(usernameActual)
                 .orElseThrow(() -> new ResourceNotFoundException("Token de usuario inválido."));
         String contraseñaActualPlana = passwordDto.getContraseñaActual();
@@ -83,18 +93,69 @@ public class UsuarioService {
         usuarioRepository.save(usuarioActual);
     }
     
-    // --- ¡NUEVO MÉTODO! (Petición 6) ---
-    /**
-     * Actualiza la URL de la foto de perfil del usuario.
-     */
     @Transactional
     public UsuarioResponseDTO updateFotoPerfil(String username, String fotoUrl) {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Token de usuario inválido."));
-        
         usuario.setFotoPerfilUrl(fotoUrl);
         Usuario usuarioActualizado = usuarioRepository.save(usuario);
+        return new UsuarioResponseDTO(usuarioActualizado);
+    }
+    
+    // --- MÉTODOS DE GESTIÓN DE ADMIN (Petición 14) ---
+    
+    /**
+     * --- ¡REFACTORIZADO (Sprint 7)! ---
+     * (Petición B, C, G) Obtiene la lista de todos los usuarios
+     * con paginación, búsqueda y filtrado de roles.
+     * Solo para Admins.
+     */
+    @Transactional(readOnly = true)
+    public Page<UsuarioResponseDTO> getAllUsuarios(Pageable pageable, String search, String roleFilter) {
         
+        // 1. Creamos la "Especificación" (la consulta dinámica)
+        Specification<Usuario> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 2. (Petición C) Filtro de Búsqueda (busca en username Y email)
+            if (search != null && !search.isBlank()) {
+                String likePattern = "%" + search.toLowerCase() + "%";
+                Predicate searchUsername = cb.like(cb.lower(root.get("username")), likePattern);
+                Predicate searchEmail = cb.like(cb.lower(root.get("email")), likePattern);
+                predicates.add(cb.or(searchUsername, searchEmail));
+            }
+
+            // 3. (Petición G) Filtro de Roles
+            if (roleFilter != null && !roleFilter.isBlank()) {
+                if ("MODERADOR".equalsIgnoreCase(roleFilter)) {
+                    predicates.add(cb.isTrue(root.get("esModerador")));
+                } else if ("ADMIN".equalsIgnoreCase(roleFilter)) {
+                    predicates.add(cb.isTrue(root.get("esAdministrador")));
+                }
+            }
+
+            // Combinamos todos los filtros con AND
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // 4. Ejecutamos la consulta paginada con los filtros
+        Page<Usuario> usuarios = usuarioRepository.findAll(spec, pageable);
+        
+        // 5. Convertimos la página de Entidades a DTOs
+        return usuarios.map(UsuarioResponseDTO::new);
+    }
+
+    /**
+     * (Petición 14 - PUT) Actualiza los roles de un usuario.
+     */
+    @Transactional
+    public UsuarioResponseDTO updateUserRoles(Long usuarioId, RolUpdateDTO dto) {
+        // ... (código sin cambios)
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró un usuario con ID: " + usuarioId));
+        usuario.setEsModerador(dto.getEsModerador());
+        usuario.setEsAdministrador(dto.getEsAdministrador());
+        Usuario usuarioActualizado = usuarioRepository.save(usuario);
         return new UsuarioResponseDTO(usuarioActualizado);
     }
 }

@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size; 
 
 /**
- * --- ¡ACTUALIZADO (Sprint 3)! ---
+ * --- ¡ACTUALIZADO (Sprint 4)! ---
  */
 @Entity 
 @Table(name = "usuarios") 
@@ -16,6 +16,7 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY) 
     private Long id;
 
+    // ... (campos username, email, password sin cambios) ...
     @Column(unique = true, nullable = false, length = 50) 
     @NotBlank(message = "El nombre de usuario no puede estar vacío") 
     @Size(min = 4, max = 50, message = "El nombre de usuario debe tener entre 4 y 50 caracteres")
@@ -32,9 +33,12 @@ public class Usuario {
 
     @Column(nullable = false)
     private Boolean esModerador = false; 
+    
+    // --- ¡NUEVO CAMPO AÑADIDO! (Petición 13) ---
+    @Column(nullable = false)
+    private Boolean esAdministrador = false; // Por defecto 'false'
 
-    // --- ¡NUEVO CAMPO AÑADIDO! (Petición 6) ---
-    @Column(length = 255) // Para almacenar la URL de GCS
+    @Column(length = 255) 
     private String fotoPerfilUrl;
     
     // --- Constructores ---
@@ -45,10 +49,12 @@ public class Usuario {
         this.username = username;
         this.email = email;
         this.password = password;
+        // esModerador y esAdministrador son 'false' por defecto
     }
     
     // --- Getters y Setters ---
 
+    // ... (getters/setters de id, username, email, password, esModerador, fotoPerfilUrl sin cambios) ...
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getUsername() { return username; }
@@ -59,8 +65,10 @@ public class Usuario {
     public void setPassword(String password) { this.password = password; }
     public Boolean getEsModerador() { return esModerador; }
     public void setEsModerador(Boolean esModerador) { this.esModerador = esModerador; }
-
-    // --- ¡NUEVO GETTER/SETTER! ---
     public String getFotoPerfilUrl() { return fotoPerfilUrl; }
     public void setFotoPerfilUrl(String fotoPerfilUrl) { this.fotoPerfilUrl = fotoPerfilUrl; }
+    
+    // --- ¡NUEVO GETTER/SETTER! ---
+    public Boolean getEsAdministrador() { return esAdministrador; }
+    public void setEsAdministrador(Boolean esAdministrador) { this.esAdministrador = esAdministrador; }
 }

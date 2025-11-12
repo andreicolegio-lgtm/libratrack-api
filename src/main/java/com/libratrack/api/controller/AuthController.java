@@ -1,6 +1,7 @@
 package com.libratrack.api.controller;
 
 import com.libratrack.api.dto.LoginResponseDTO;
+import com.libratrack.api.dto.UsuarioResponseDTO; // <-- ¡NUEVA IMPORTACIÓN!
 import com.libratrack.api.entity.Usuario;
 import com.libratrack.api.repository.UsuarioRepository;
 import com.libratrack.api.service.UsuarioService;
@@ -18,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Controlador REST para las rutas de autenticación públicas (Registro y Login).
+ * --- ¡ACTUALIZADO (Sprint 4)! ---
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -28,41 +29,33 @@ public class AuthController {
 
     @Autowired
     private UsuarioService usuarioService;
-
     @Autowired
     private JwtService jwtService;
-
     @Autowired
     private AuthenticationManager authenticationManager;
-
     @Autowired
     private UsuarioRepository usuarioRepository;
 
     /**
      * Endpoint para registrar un nuevo usuario (RF01).
-     *
-     * REFACTORIZADO: Se eliminó el BindingResult y el try-catch.
-     * La validación (@Valid) se captura en GlobalExceptionHandler.
-     * Los errores de negocio (ConflictException) se capturan en GlobalExceptionHandler.
+     * --- ¡CORREGIDO! Ahora devuelve un DTO. ---
      */
     @PostMapping("/register") 
-    public ResponseEntity<Usuario> registerUser(@Valid @RequestBody Usuario usuario) { // Se eliminó BindingResult
+    public ResponseEntity<UsuarioResponseDTO> registerUser(@Valid @RequestBody Usuario usuario) { 
         
-        // 1. Llama al servicio (el servicio lanzará ConflictException si falla)
-        Usuario usuarioRegistrado = usuarioService.registrarUsuario(usuario);
+        // 1. Llama al servicio (que ahora devuelve un DTO)
+        UsuarioResponseDTO usuarioRegistrado = usuarioService.registrarUsuario(usuario);
         
-        // 2. (Buena Práctica de Seguridad)
-        usuarioRegistrado.setPassword(null); 
-        
-        // 3. Devuelve 201 Created
+        // 2. Devuelve 201 Created (el DTO ya es seguro, no contiene password)
         return new ResponseEntity<>(usuarioRegistrado, HttpStatus.CREATED); 
     }
 
     /**
-     * Endpoint para el login de usuario (RF02), usando EMAIL y CONTRASEÑA.
+     * Endpoint para el login de usuario (RF02).
      */
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> loginRequest) {
+        // ... (código sin cambios) ...
         String email = loginRequest.getOrDefault("email", "").trim();
         String password = loginRequest.getOrDefault("password", "").trim();
 
@@ -71,22 +64,12 @@ public class AuthController {
         }
 
         try {
-            // 1. "Traducir" Email a Username:
             Usuario usuario = usuarioRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("Usuario o contraseña incorrectos"));
-
             String username = usuario.getUsername();
-
-            // 2. Autenticar:
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password);
-
-            // 3. Entregamos el ticket al "Jefe de Seguridad" (si falla, lanza excepción)
             authenticationManager.authenticate(authToken);
-
-            // 4. Generar Token:
             String token = jwtService.generateToken(username);
-
-            // 5. Devolver el Token
             return new ResponseEntity<>(new LoginResponseDTO(token), HttpStatus.OK);
 
         } catch (IllegalArgumentException e) {

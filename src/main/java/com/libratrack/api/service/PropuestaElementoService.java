@@ -1,6 +1,7 @@
 // Archivo: src/main/java/com/libratrack/api/service/PropuestaElementoService.java
 package com.libratrack.api.service;
 
+// --- ¡BLOQUE DE IMPORTACIÓN AÑADIDO! ---
 import com.libratrack.api.dto.ElementoResponseDTO;
 import com.libratrack.api.dto.PropuestaRequestDTO;
 import com.libratrack.api.dto.PropuestaResponseDTO;
@@ -19,11 +20,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+// --- FIN DEL BLOQUE DE IMPORTACIÓN ---
 
+/**
+ * Servicio para la lógica de negocio de la cola de moderación.
+ * --- ¡ACTUALIZADO (Sprint 4)! ---
+ */
 @Service
 public class PropuestaElementoService {
 
-    // ... (Inyecciones sin cambios) ...
     @Autowired private PropuestaElementoRepository propuestaRepo;
     @Autowired private UsuarioRepository usuarioRepo;
     @Autowired private ElementoRepository elementoRepo;
@@ -32,27 +37,29 @@ public class PropuestaElementoService {
 
     @Transactional
     public PropuestaResponseDTO createPropuesta(PropuestaRequestDTO dto, String proponenteUsername) { 
-        // ... (código sin cambios) ...
         Usuario proponente = usuarioRepo.findByUsername(proponenteUsername)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario proponente no encontrado.")); 
+        
         PropuestaElemento nuevaPropuesta = new PropuestaElemento();
         nuevaPropuesta.setProponente(proponente);
         nuevaPropuesta.setTituloSugerido(dto.getTituloSugerido());
         nuevaPropuesta.setDescripcionSugerida(dto.getDescripcionSugerida());
         nuevaPropuesta.setTipoSugerido(dto.getTipoSugerido());
         nuevaPropuesta.setGenerosSugeridos(dto.getGenerosSugeridos());
+        
+        // --- Campos de Progreso (Refactorizados) ---
         nuevaPropuesta.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
         nuevaPropuesta.setTotalUnidades(dto.getTotalUnidades());
         nuevaPropuesta.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
         nuevaPropuesta.setTotalPaginasLibro(dto.getTotalPaginasLibro());
-        // (El campo urlImagen es null aquí, lo cual es correcto)
+
         PropuestaElemento propuestaGuardada = propuestaRepo.save(nuevaPropuesta);
+        
         return new PropuestaResponseDTO(propuestaGuardada);
     }
 
     @Transactional(readOnly = true) 
     public List<PropuestaResponseDTO> getPropuestasPorEstado(EstadoPropuesta estado) {
-        // ... (código sin cambios) ...
         List<PropuestaElemento> propuestas = propuestaRepo.findByEstadoPropuesta(estado);
         return propuestas.stream()
                 .map(PropuestaResponseDTO::new)
@@ -62,7 +69,6 @@ public class PropuestaElementoService {
     @Transactional
     public ElementoResponseDTO aprobarPropuesta(Long propuestaId, Long revisorId, PropuestaUpdateDTO dto) { 
         
-        // ... (validaciones de revisor, propuesta, estado, tipos y géneros sin cambios) ...
         Usuario revisor = usuarioRepo.findById(revisorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario revisor no encontrado.")); 
         PropuestaElemento propuesta = propuestaRepo.findById(propuestaId)
@@ -71,14 +77,13 @@ public class PropuestaElementoService {
             throw new ConflictException("Esta propuesta ya ha sido gestionada."); 
         }
         
-        // 4. Actualizamos la propuesta con las ediciones del moderador (del DTO)
-        updatePropuestaFields(propuesta, dto); // <-- ¡MÉTODO HELPER ACTUALIZADO!
+        updatePropuestaFields(propuesta, dto); 
         
-        // 5. Lógica de "Traducción"
+        // Lógica de "Traducción"
         Tipo tipoFinal = traducirTipo(propuesta.getTipoSugerido());
         Set<Genero> generosFinales = traducirGeneros(propuesta.getGenerosSugeridos());
         
-        // 6. Crear el nuevo Elemento
+        // Crear el nuevo Elemento
         Elemento nuevoElemento = new Elemento();
         nuevoElemento.setTitulo(propuesta.getTituloSugerido());
         nuevoElemento.setDescripcion(propuesta.getDescripcionSugerida());
@@ -87,22 +92,20 @@ public class PropuestaElementoService {
         nuevoElemento.setGeneros(generosFinales);
         nuevoElemento.setEstadoContenido(EstadoContenido.COMUNITARIO);
         nuevoElemento.setEstadoPublicacion(EstadoPublicacion.DISPONIBLE); 
+        nuevoElemento.setUrlImagen(propuesta.getUrlImagen()); // (Petición 6)
 
-        // --- ¡LÍNEA AÑADIDA! (Petición 6) ---
-        nuevoElemento.setUrlImagen(propuesta.getUrlImagen());
-
-        // Copiamos los datos de progreso total
+        // Copiar datos de progreso
         nuevoElemento.setEpisodiosPorTemporada(propuesta.getEpisodiosPorTemporada());
         nuevoElemento.setTotalUnidades(propuesta.getTotalUnidades());
         nuevoElemento.setTotalCapitulosLibro(propuesta.getTotalCapitulosLibro());
         nuevoElemento.setTotalPaginasLibro(propuesta.getTotalPaginasLibro());
 
-        // 7. Actualizar la propuesta como "APROBADA"
+        // Actualizar la propuesta
         propuesta.setEstadoPropuesta(EstadoPropuesta.APROBADO);
         propuesta.setRevisor(revisor);
         propuestaRepo.save(propuesta); 
 
-        // 8. Guardar el nuevo elemento
+        // Guardar el nuevo elemento
         Elemento elementoGuardado = elementoRepo.save(nuevoElemento);
         
         return new ElementoResponseDTO(elementoGuardado);
@@ -110,26 +113,26 @@ public class PropuestaElementoService {
     
     /**
      * Método helper para actualizar una PropuestaElemento con datos de un DTO.
-     * --- ¡ACTUALIZADO (Petición 6)! ---
      */
     private void updatePropuestaFields(PropuestaElemento propuesta, PropuestaUpdateDTO dto) {
         propuesta.setTituloSugerido(dto.getTituloSugerido());
         propuesta.setDescripcionSugerida(dto.getDescripcionSugerida());
         propuesta.setTipoSugerido(dto.getTipoSugerido());
         propuesta.setGenerosSugeridos(dto.getGenerosSugeridos());
-        
-        // --- ¡LÍNEA AÑADIDA! (Petición 6) ---
         propuesta.setUrlImagen(dto.getUrlImagen());
         
-        // --- Campos de Progreso (Refactorizados) ---
         propuesta.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
         propuesta.setTotalUnidades(dto.getTotalUnidades());
         propuesta.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
         propuesta.setTotalPaginasLibro(dto.getTotalPaginasLibro());
     }
     
-    // ... (Métodos traducirTipo y traducirGeneros sin cambios) ...
-    private Tipo traducirTipo(String tipoSugerido) {
+    // --- Métodos Helper Públicos (para reutilizar en ElementoService) ---
+    
+    /**
+     * Busca un Tipo por su nombre. Si no existe, lo crea.
+     */
+    public Tipo traducirTipo(String tipoSugerido) {
         if (tipoSugerido == null || tipoSugerido.isBlank()) {
             throw new ConflictException("El Tipo sugerido no puede estar vacío."); 
         }
@@ -137,7 +140,11 @@ public class PropuestaElementoService {
                 .orElseGet(() -> tipoRepository.save(new Tipo(tipoSugerido)));
     }
     
-    private Set<Genero> traducirGeneros(String generosSugeridosString) {
+    /**
+     * Busca una lista de Géneros por sus nombres (separados por coma).
+     * Si no existen, los crea.
+     */
+    public Set<Genero> traducirGeneros(String generosSugeridosString) {
         if (generosSugeridosString == null || generosSugeridosString.isBlank()) {
             throw new ConflictException("Los Géneros sugeridos no pueden estar vacíos."); 
         }

@@ -1,61 +1,30 @@
 package com.libratrack.api.repository;
 
-import com.libratrack.api.entity.Usuario; // Importa la entidad Usuario
-import org.springframework.data.jpa.repository.JpaRepository; // Importa la funcionalidad principal de JPA
+import com.libratrack.api.entity.Usuario;
+import org.springframework.data.jpa.repository.JpaRepository;
+// --- ¡NUEVA IMPORTACIÓN! ---
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional; // Importa Optional, una forma segura de manejar valores nulos
+import java.util.Optional;
 
 /**
- * Repositorio para la entidad Usuario.
- * Extiende JpaRepository, lo que nos da gratis métodos CRUD (Create, Read, Update, Delete)
- * como save(), findById(), findAll(), deleteById(), etc.
+ * --- ¡ACTUALIZADO (Sprint 7)! ---
+ * Ahora extiende JpaSpecificationExecutor para permitir consultas dinámicas
+ * (búsqueda y filtrado en el panel de admin).
  */
-@Repository // Le dice a Spring que esta es una interfaz de acceso a datos
-public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-    // JpaRepository<TipoDeLaEntidad, TipoDelID>
+@Repository
+public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpecificationExecutor<Usuario> {
 
-    // --- Métodos Mágicos (Query Methods) ---
-    // Spring Data JPA crea automáticamente la consulta SQL basándose
-    // en el nombre del método.
-
-    /**
-     * Busca un usuario por su 'username'.
-     * Spring traduce esto a: "SELECT * FROM usuarios WHERE username = ?"
-     * Esencial para UserDetailsServiceImpl (seguridad JWT).
-     *
-     * @param username El nombre de usuario a buscar.
-     * @return Un 'Optional' que contendrá al Usuario si se encuentra.
-     */
-    Optional<Usuario> findByUsername(String username);
-
-    /**
-     * Busca un usuario por su 'email'.
-     * Spring traduce esto a: "SELECT * FROM usuarios WHERE email = ?"
-     * Esencial para el AuthController (login con email, RF02).
-     *
-     * @param email El email a buscar.
-     * @return Un 'Optional' que contendrá al Usuario si se encuentra.
-     */
+    // (RF02) Usado por AuthController
     Optional<Usuario> findByEmail(String email);
 
-    /**
-     * Comprueba eficientemente si un 'username' ya existe.
-     * Spring traduce esto a: "SELECT COUNT(*) > 0 FROM usuarios WHERE username = ?"
-     * Usado por el UsuarioService para validar el registro (RF01).
-     *
-     * @param username El nombre de usuario a comprobar.
-     * @return true si ya existe, false si no.
-     */
-    Boolean existsByUsername(String username);
+    // (RF01, RF04) Usado por UserDetailsServiceImpl y UsuarioService
+    Optional<Usuario> findByUsername(String username);
 
-    /**
-     * Comprueba eficientemente si un 'email' ya existe.
-     * Usado por el UsuarioService para validar el registro (RF01).
-     *
-     * @param email El email a comprobar.
-     * @return true si ya existe, false si no.
-     */
+    // (RF01) Usado por UsuarioService (register)
     Boolean existsByEmail(String email);
 
+    // (RF01) Usado por UsuarioService (register)
+    Boolean existsByUsername(String username);
 }

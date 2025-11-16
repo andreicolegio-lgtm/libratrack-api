@@ -1,70 +1,104 @@
 package com.libratrack.api.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Min;
 
-/**
- * DTO para RECIBIR una propuesta de Elemento del cliente (RF13).
- * --- ¡ACTUALIZADO (Sprint 2 / V2)! ---
- */
 public class PropuestaRequestDTO {
 
-    // ... (Campos básicos: titulo, descripcion, tipo, generos, imagen ... sin cambios)
-    @NotBlank
-    @Size(max = 255)
-    private String tituloSugerido;
-    @NotBlank
-    @Size(max = 5000)
-    private String descripcionSugerida;
-    @NotBlank
-    private String tipoSugerido; 
-    @NotBlank
-    private String generosSugeridos; 
-    private String imagenPortadaUrl; 
-    
-    // --- ¡CAMPOS DE PROGRESO REFACTORIZADOS! (Petición b, c, d) ---
-    // (Todos son opcionales en el formulario de propuesta inicial)
-    
-    @Size(max = 255, message = "La cadena de episodios por temporada es muy larga")
-    private String episodiosPorTemporada; // Para Series (ej. "10,8,12")
+  @NotBlank
+  @Size(max = 255)
+  private String tituloSugerido;
 
-    @Min(value = 1)
-    private Integer totalUnidades; // Para Anime / Manga
+  @NotBlank
+  @Size(max = 5000)
+  private String descripcionSugerida;
 
-    @Min(value = 1)
-    private Integer totalCapitulosLibro; // Para Libros
+  @NotBlank private String tipoSugerido;
+  @NotBlank private String generosSugeridos;
+  private String imagenPortadaUrl;
 
-    @Min(value = 1)
-    private Integer totalPaginasLibro; // Para Libros
-    
-    // --- CAMPOS ANTIGUOS (ELIMINADOS) ---
-    // private Integer totalTemporadas;
-    // private Boolean esUnidadUnica;
-    // private Integer totalCapitulos;
-    // private Integer totalPaginas;
+  @Size(max = 255, message = "La cadena de episodios por temporada es muy larga")
+  private String episodiosPorTemporada;
 
-    // --- Getters y Setters ---
-    
-    // ... (Getters/Setters básicos ... sin cambios)
-    public String getTituloSugerido() { return tituloSugerido; }
-    public void setTituloSugerido(String tituloSugerido) { this.tituloSugerido = tituloSugerido; }
-    public String getDescripcionSugerida() { return descripcionSugerida; }
-    public void setDescripcionSugerida(String descripcionSugerida) { this.descripcionSugerida = descripcionSugerida; }
-    public String getTipoSugerido() { return tipoSugerido; }
-    public void setTipoSugerido(String tipoSugerido) { this.tipoSugerido = tipoSugerido; }
-    public String getGenerosSugeridos() { return generosSugeridos; }
-    public void setGenerosSugeridos(String generosSugeridos) { this.generosSugeridos = generosSugeridos; }
-    public String getImagenPortadaUrl() { return imagenPortadaUrl; }
-    public void setImagenPortadaUrl(String imagenPortadaUrl) { this.imagenPortadaUrl = imagenPortadaUrl; }
-    
-    // --- Getters y Setters de Progreso (Refactorizados) ---
-    public String getEpisodiosPorTemporada() { return episodiosPorTemporada; }
-    public void setEpisodiosPorTemporada(String episodiosPorTemporada) { this.episodiosPorTemporada = episodiosPorTemporada; }
-    public Integer getTotalUnidades() { return totalUnidades; }
-    public void setTotalUnidades(Integer totalUnidades) { this.totalUnidades = totalUnidades; }
-    public Integer getTotalCapitulosLibro() { return totalCapitulosLibro; }
-    public void setTotalCapitulosLibro(Integer totalCapitulosLibro) { this.totalCapitulosLibro = totalCapitulosLibro; }
-    public Integer getTotalPaginasLibro() { return totalPaginasLibro; }
-    public void setTotalPaginasLibro(Integer totalPaginasLibro) { this.totalPaginasLibro = totalPaginasLibro; }
+  @Min(value = 1)
+  private Integer totalUnidades;
+
+  @Min(value = 1)
+  private Integer totalCapitulosLibro;
+
+  @Min(value = 1)
+  private Integer totalPaginasLibro;
+
+  public String getTituloSugerido() {
+    return tituloSugerido;
+  }
+
+  public void setTituloSugerido(String tituloSugerido) {
+    this.tituloSugerido = tituloSugerido;
+  }
+
+  public String getDescripcionSugerida() {
+    return descripcionSugerida;
+  }
+
+  public void setDescripcionSugerida(String descripcionSugerida) {
+    this.descripcionSugerida = descripcionSugerida;
+  }
+
+  public String getTipoSugerido() {
+    return tipoSugerido;
+  }
+
+  public void setTipoSugerido(String tipoSugerido) {
+    this.tipoSugerido = tipoSugerido;
+  }
+
+  public String getGenerosSugeridos() {
+    return generosSugeridos;
+  }
+
+  public void setGenerosSugeridos(String generosSugeridos) {
+    this.generosSugeridos = generosSugeridos;
+  }
+
+  public String getImagenPortadaUrl() {
+    return imagenPortadaUrl;
+  }
+
+  public void setImagenPortadaUrl(String imagenPortadaUrl) {
+    this.imagenPortadaUrl = imagenPortadaUrl;
+  }
+
+  public String getEpisodiosPorTemporada() {
+    return episodiosPorTemporada;
+  }
+
+  public void setEpisodiosPorTemporada(String episodiosPorTemporada) {
+    this.episodiosPorTemporada = episodiosPorTemporada;
+  }
+
+  public Integer getTotalUnidades() {
+    return totalUnidades;
+  }
+
+  public void setTotalUnidades(Integer totalUnidades) {
+    this.totalUnidades = totalUnidades;
+  }
+
+  public Integer getTotalCapitulosLibro() {
+    return totalCapitulosLibro;
+  }
+
+  public void setTotalCapitulosLibro(Integer totalCapitulosLibro) {
+    this.totalCapitulosLibro = totalCapitulosLibro;
+  }
+
+  public Integer getTotalPaginasLibro() {
+    return totalPaginasLibro;
+  }
+
+  public void setTotalPaginasLibro(Integer totalPaginasLibro) {
+    this.totalPaginasLibro = totalPaginasLibro;
+  }
 }

@@ -72,7 +72,7 @@ public class ElementoService {
     Usuario admin =
         usuarioRepository
             .findByUsername(adminUsername)
-            .orElseThrow(() -> new ResourceNotFoundException("Admin no encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("ADMIN_NOT_FOUND"));
 
     Elemento nuevoElemento = new Elemento();
 
@@ -92,17 +92,14 @@ public class ElementoService {
     Elemento elemento =
         elementoRepository
             .findById(elementoId)
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException("Elemento no encontrado con id: " + elementoId));
+            .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
 
     mapElementoFromFormDTO(elemento, dto);
 
     Elemento elementoGuardado = elementoRepository.save(elemento);
 
     return findElementoById(elementoGuardado.getId())
-        .orElseThrow(
-            () -> new ResourceNotFoundException("Error al recargar el elemento actualizado."));
+        .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_RELOAD_ERROR"));
   }
 
   @Transactional
@@ -110,14 +107,11 @@ public class ElementoService {
     Elemento elemento =
         elementoRepository
             .findById(elementoId)
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException("Elemento no encontrado con id: " + elementoId));
+            .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
     elemento.setEstadoContenido(EstadoContenido.OFICIAL);
     Elemento elementoGuardado = elementoRepository.save(elemento);
     return findElementoById(elementoGuardado.getId())
-        .orElseThrow(
-            () -> new ResourceNotFoundException("Error al recargar el elemento actualizado."));
+        .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_RELOAD_ERROR"));
   }
 
   @Transactional
@@ -125,14 +119,11 @@ public class ElementoService {
     Elemento elemento =
         elementoRepository
             .findById(elementoId)
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException("Elemento no encontrado con id: " + elementoId));
+            .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
     elemento.setEstadoContenido(EstadoContenido.COMUNITARIO);
     Elemento elementoGuardado = elementoRepository.save(elemento);
     return findElementoById(elementoGuardado.getId())
-        .orElseThrow(
-            () -> new ResourceNotFoundException("Error al recargar el elemento actualizado."));
+        .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_RELOAD_ERROR"));
   }
 
   private void mapElementoFromFormDTO(Elemento elemento, ElementoFormDTO dto) {

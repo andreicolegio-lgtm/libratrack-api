@@ -26,14 +26,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsuarioService {
   @Transactional(readOnly = true)
   public UsuarioResponseDTO getMiPerfilById(Long userId) {
-    Usuario usuario = usuarioRepository.findById(userId)
-      .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+    Usuario usuario =
+        usuarioRepository
+            .findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
     return new UsuarioResponseDTO(usuario);
   }
 
   public UsuarioResponseDTO updateMiPerfilById(Long userId, UsuarioUpdateDTO updateDto) {
-    Usuario usuarioActual = usuarioRepository.findById(userId)
-      .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+    Usuario usuarioActual =
+        usuarioRepository
+            .findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
     String nuevoUsername = updateDto.getUsername().trim();
     if (usuarioActual.getUsername().equals(nuevoUsername)) {
       return new UsuarioResponseDTO(usuarioActual);
@@ -48,8 +52,10 @@ public class UsuarioService {
   }
 
   public void changePasswordById(Long userId, PasswordChangeDTO passwordDto) {
-    Usuario usuarioActual = usuarioRepository.findById(userId)
-      .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+    Usuario usuarioActual =
+        usuarioRepository
+            .findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
     String contraseñaActualPlana = passwordDto.getContraseñaActual();
     String contraseñaActualHasheada = usuarioActual.getPassword();
     if (!passwordEncoder.matches(contraseñaActualPlana, contraseñaActualHasheada)) {
@@ -62,8 +68,10 @@ public class UsuarioService {
   }
 
   public UsuarioResponseDTO updateFotoPerfilById(Long userId, String fotoUrl) {
-    Usuario usuario = usuarioRepository.findById(userId)
-      .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+    Usuario usuario =
+        usuarioRepository
+            .findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
     usuario.setFotoPerfilUrl(fotoUrl);
     Usuario usuarioActualizado = usuarioRepository.save(usuario);
     return new UsuarioResponseDTO(usuarioActualizado);
@@ -92,20 +100,18 @@ public class UsuarioService {
   @Transactional(readOnly = true)
   public UsuarioResponseDTO getMiPerfil(String username) {
     Usuario usuario =
-      usuarioRepository
-        .findByUsername(username)
-        .orElseThrow(
-          () ->
-            new ResourceNotFoundException("INVALID_USER_TOKEN"));
+        usuarioRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
     return new UsuarioResponseDTO(usuario);
   }
 
   @Transactional
   public UsuarioResponseDTO updateMiPerfil(String usernameActual, UsuarioUpdateDTO updateDto) {
     Usuario usuarioActual =
-      usuarioRepository
-        .findByUsername(usernameActual)
-        .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+        usuarioRepository
+            .findByUsername(usernameActual)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
     String nuevoUsername = updateDto.getUsername().trim();
     if (usuarioActual.getUsername().equals(nuevoUsername)) {
       return new UsuarioResponseDTO(usuarioActual);
@@ -122,9 +128,9 @@ public class UsuarioService {
   @Transactional
   public void changePassword(String usernameActual, PasswordChangeDTO passwordDto) {
     Usuario usuarioActual =
-      usuarioRepository
-        .findByUsername(usernameActual)
-        .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+        usuarioRepository
+            .findByUsername(usernameActual)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
     String contraseñaActualPlana = passwordDto.getContraseñaActual();
     String contraseñaActualHasheada = usuarioActual.getPassword();
     if (!passwordEncoder.matches(contraseñaActualPlana, contraseñaActualHasheada)) {
@@ -139,9 +145,9 @@ public class UsuarioService {
   @Transactional
   public UsuarioResponseDTO updateFotoPerfil(String username, String fotoUrl) {
     Usuario usuario =
-      usuarioRepository
-        .findByUsername(username)
-        .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+        usuarioRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
     usuario.setFotoPerfilUrl(fotoUrl);
     Usuario usuarioActualizado = usuarioRepository.save(usuario);
     return new UsuarioResponseDTO(usuarioActualizado);
@@ -181,11 +187,9 @@ public class UsuarioService {
   @Transactional
   public UsuarioResponseDTO updateUserRoles(Long usuarioId, RolUpdateDTO dto) {
     Usuario usuario =
-      usuarioRepository
-        .findById(usuarioId)
-        .orElseThrow(
-          () ->
-            new ResourceNotFoundException("INVALID_USER_TOKEN"));
+        usuarioRepository
+            .findById(usuarioId)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
     usuario.setEsModerador(dto.getEsModerador());
     usuario.setEsAdministrador(dto.getEsAdministrador());
     Usuario usuarioActualizado = usuarioRepository.save(usuario);

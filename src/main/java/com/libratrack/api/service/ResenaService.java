@@ -39,16 +39,14 @@ public class ResenaService {
   public ResenaResponseDTO createResena(ResenaDTO dto, String username) {
 
     Usuario usuario =
-      usuarioRepo
-        .findByUsername(username)
-        .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+        usuarioRepo
+            .findByUsername(username)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
 
     Elemento elemento =
-      elementoRepo
-        .findById(dto.getElementoId())
-        .orElseThrow(
-          () ->
-            new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
+        elementoRepo
+            .findById(dto.getElementoId())
+            .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
 
     Optional<Resena> existingResena =
         resenaRepo.findByUsuarioIdAndElementoId(usuario.getId(), elemento.getId());

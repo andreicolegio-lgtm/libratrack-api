@@ -74,7 +74,7 @@ public class PropuestaElementoService {
                     new ResourceNotFoundException(
                         "Propuesta no encontrada con id: " + propuestaId));
     if (propuesta.getEstadoPropuesta() != EstadoPropuesta.PENDIENTE) {
-      throw new ConflictException("Esta propuesta ya ha sido gestionada.");
+      throw new ConflictException("PROPOSAL_ALREADY_HANDLED");
     }
 
     updatePropuestaFields(propuesta, dto);
@@ -121,7 +121,7 @@ public class PropuestaElementoService {
 
   public Tipo traducirTipo(String tipoSugerido) {
     if (tipoSugerido == null || tipoSugerido.isBlank()) {
-      throw new ConflictException("El Tipo sugerido no puede estar vacío.");
+      throw new ConflictException("TYPE_EMPTY");
     }
     return tipoRepository
         .findByNombre(tipoSugerido)
@@ -130,7 +130,7 @@ public class PropuestaElementoService {
 
   public Set<Genero> traducirGeneros(String generosSugeridosString) {
     if (generosSugeridosString == null || generosSugeridosString.isBlank()) {
-      throw new ConflictException("Los Géneros sugeridos no pueden estar vacíos.");
+      throw new ConflictException("GENRES_EMPTY");
     }
     Set<Genero> generosFinales = new HashSet<>();
     String[] generosSugeridosArray = generosSugeridosString.split("\\s*,\\s*");
@@ -143,7 +143,7 @@ public class PropuestaElementoService {
       generosFinales.add(genero);
     }
     if (generosFinales.isEmpty()) {
-      throw new ConflictException("Se debe proporcionar al menos un género válido.");
+      throw new ConflictException("GENRE_INVALID");
     }
     return generosFinales;
   }

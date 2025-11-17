@@ -46,7 +46,7 @@ public class CatalogoPersonalService {
                     new ResourceNotFoundException("Elemento no encontrado con id: " + elementoId));
 
     if (catalogoRepo.findByUsuarioIdAndElementoId(usuario.getId(), elemento.getId()).isPresent()) {
-      throw new ConflictException("Este elemento ya está en tu catálogo.");
+      throw new ConflictException("ALREADY_IN_CATALOG");
     }
 
     CatalogoPersonal nuevaEntrada = new CatalogoPersonal();

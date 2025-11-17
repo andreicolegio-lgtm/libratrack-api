@@ -27,7 +27,7 @@ public class ResenaService {
   @Transactional(readOnly = true)
   public List<ResenaResponseDTO> getResenasByElementoId(Long elementoId) {
     if (!elementoRepo.existsById(elementoId)) {
-      throw new ResourceNotFoundException("Elemento no encontrado con id: " + elementoId);
+      throw new ResourceNotFoundException("ELEMENT_NOT_FOUND");
     }
 
     List<Resena> resenas = resenaRepo.findByElementoIdOrderByFechaCreacionDesc(elementoId);
@@ -39,22 +39,21 @@ public class ResenaService {
   public ResenaResponseDTO createResena(ResenaDTO dto, String username) {
 
     Usuario usuario =
-        usuarioRepo
-            .findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("Token de usuario inválido."));
+      usuarioRepo
+        .findByUsername(username)
+        .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
 
     Elemento elemento =
-        elementoRepo
-            .findById(dto.getElementoId())
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException(
-                        "Elemento no encontrado con id: " + dto.getElementoId()));
+      elementoRepo
+        .findById(dto.getElementoId())
+        .orElseThrow(
+          () ->
+            new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
 
     Optional<Resena> existingResena =
         resenaRepo.findByUsuarioIdAndElementoId(usuario.getId(), elemento.getId());
     if (existingResena.isPresent()) {
-      throw new ConflictException("Ya has reseñado este elemento.");
+      throw new ConflictException("ALREADY_REVIEWED");
     }
 
     Resena nuevaResena = new Resena();
@@ -62,7 +61,7 @@ public class ResenaService {
     nuevaResena.setElemento(elemento);
 
     if (dto.getValoracion() == null || dto.getValoracion() < 1 || dto.getValoracion() > 5) {
-      throw new ConflictException("La valoración debe estar entre 1 y 5.");
+      throw new ConflictException("INVALID_RATING_RANGE");
     }
     nuevaResena.setValoracion(dto.getValoracion());
     nuevaResena.setTextoResena(dto.getTextoResena());

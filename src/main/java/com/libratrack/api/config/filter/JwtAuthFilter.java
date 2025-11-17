@@ -34,7 +34,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     final String authHeader = request.getHeader("Authorization");
     final String token;
-    final String username;
+    final Long userId;
 
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
       logger.debug("Authorization header is missing or does not start with 'Bearer '");
@@ -45,37 +45,30 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     token = authHeader.substring(7);
 
     try {
-      username = jwtService.extractUsername(token);
-
+      userId = jwtService.extractUserId(token);
     } catch (ExpiredJwtException e) {
       logger.warn("JWT Token has expired: {}", e.getMessage());
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       response.getWriter().write("Token JWT caducado");
       return;
-
     } catch (Exception e) {
-      logger.warn("Failed to extract username from token: {}", e.getMessage());
+      logger.warn("Failed to extract userId from token: {}", e.getMessage());
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       response.getWriter().write("Token JWT inválido");
       return;
     }
 
-    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-      UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(username);
-
+    if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+      UserDetails userDetails = userDetailsServiceImpl.loadUserById(userId);
       if (jwtService.validateToken(token, userDetails)) {
-
         UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
-
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
         SecurityContextHolder.getContext().setAuthentication(authToken);
-        logger.info("Authentication successful for user: {}", username);
+        logger.info("Authentication successful for userId: {}", userId);
       } else {
-        logger.warn("Token validation failed for user: {}", username);
+        logger.warn("Token validation failed for userId: {}", userId);
       }
     }
 

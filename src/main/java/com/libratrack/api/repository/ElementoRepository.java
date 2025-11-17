@@ -24,7 +24,7 @@ public interface ElementoRepository extends JpaRepository<Elemento, Long> {
               + "WHERE "
               + "(LOWER(e.titulo) LIKE LOWER(CONCAT('%', COALESCE(:searchText, ''), '%'))) "
               + "AND (:tipoName IS NULL OR t_filter.nombre = :tipoName) "
-              + "AND (:generoName IS NULL OR g_filter.nombre = :generOame)",
+              + "AND (:generoName IS NULL OR g_filter.nombre = :generoName)",
       countQuery =
           "SELECT COUNT(DISTINCT e.id) FROM Elemento e "
               + "LEFT JOIN e.tipo t_filter "

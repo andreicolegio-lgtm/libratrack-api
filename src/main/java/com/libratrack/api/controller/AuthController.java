@@ -64,7 +64,7 @@ public class AuthController {
       GoogleIdToken.Payload payload = idToken.getPayload();
       Usuario usuario = usuarioService.findOrCreateGoogleUser(payload);
 
-      String accessToken = jwtService.generateToken(usuario.getUsername());
+      String accessToken = jwtService.generateToken(usuario.getId());
       RefreshToken refreshToken = refreshTokenService.createRefreshToken(usuario.getUsername());
 
       logger.info("Login (Google) exitoso para: {}", usuario.getEmail());
@@ -110,7 +110,7 @@ public class AuthController {
           new UsernamePasswordAuthenticationToken(username, password);
       authenticationManager.authenticate(authToken);
 
-      String accessToken = jwtService.generateToken(username);
+      String accessToken = jwtService.generateToken(usuario.getId());
       RefreshToken refreshToken = refreshTokenService.createRefreshToken(username);
 
       return new ResponseEntity<>(
@@ -149,7 +149,7 @@ public class AuthController {
 
       refreshTokenService.verifyExpiration(refreshToken);
       Usuario usuario = refreshToken.getUsuario();
-      String newAccessToken = jwtService.generateToken(usuario.getUsername());
+      String newAccessToken = jwtService.generateToken(usuario.getId());
 
       return ResponseEntity.ok(new LoginResponseDTO(newAccessToken, requestRefreshToken));
 

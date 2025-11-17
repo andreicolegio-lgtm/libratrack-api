@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     Map<String, Object> body = new HashMap<>();
     body.put("timestamp", new Date());
     body.put("status", HttpStatus.FORBIDDEN.value());
-    body.put("error", "Forbidden");
+    body.put("error", "FORBIDDEN");
     body.put("message", "No tienes permiso para acceder a este recurso.");
     body.put("path", request.getDescription(false).substring(4));
 
@@ -42,8 +42,8 @@ public class GlobalExceptionHandler {
     Map<String, Object> body = new HashMap<>();
     body.put("timestamp", new Date());
     body.put("status", HttpStatus.NOT_FOUND.value());
-    body.put("error", "Not Found");
-    body.put("message", ex.getMessage());
+    body.put("error", "RESOURCE_NOT_FOUND");
+    body.put("details", ex.getMessage());
     body.put("path", request.getDescription(false).substring(4));
 
     return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
@@ -55,8 +55,7 @@ public class GlobalExceptionHandler {
     Map<String, Object> body = new HashMap<>();
     body.put("timestamp", new Date());
     body.put("status", HttpStatus.CONFLICT.value());
-    body.put("error", "Conflict");
-    body.put("message", ex.getMessage());
+    body.put("error", ex.getMessage()); // Already a key
     body.put("path", request.getDescription(false).substring(4));
 
     return new ResponseEntity<>(body, HttpStatus.CONFLICT);
@@ -73,7 +72,7 @@ public class GlobalExceptionHandler {
     Map<String, Object> body = new HashMap<>();
     body.put("timestamp", new Date());
     body.put("status", HttpStatus.BAD_REQUEST.value());
-    body.put("error", "Bad Request");
+    body.put("error", "VALIDATION_ERROR");
     body.put("message", "Error de validación");
     body.put("errors", errors);
     body.put("path", request.getDescription(false).substring(4));
@@ -87,8 +86,8 @@ public class GlobalExceptionHandler {
     Map<String, Object> body = new HashMap<>();
     body.put("timestamp", new Date());
     body.put("status", HttpStatus.BAD_REQUEST.value());
-    body.put("error", "Bad Request");
-    body.put("message", ex.getMessage());
+    body.put("error", "ILLEGAL_ARGUMENT");
+    body.put("details", ex.getMessage());
     body.put("path", request.getDescription(false).substring(4));
 
     return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
@@ -102,7 +101,7 @@ public class GlobalExceptionHandler {
     Map<String, Object> body = new HashMap<>();
     body.put("timestamp", new Date());
     body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-    body.put("error", "Internal Server Error");
+    body.put("error", "INTERNAL_SERVER_ERROR");
     body.put("message", "An unexpected error occurred. Please try again later.");
     body.put("path", request.getDescription(false).substring(4));
 

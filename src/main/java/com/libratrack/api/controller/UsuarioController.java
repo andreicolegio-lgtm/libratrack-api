@@ -21,8 +21,8 @@ public class UsuarioController {
   @GetMapping("/me")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<UsuarioResponseDTO> getMiPerfil(Principal principal) {
-    String username = principal.getName();
-    UsuarioResponseDTO perfil = usuarioService.getMiPerfil(username);
+    Long userId = Long.parseLong(principal.getName());
+    UsuarioResponseDTO perfil = usuarioService.getMiPerfilById(userId);
     return ResponseEntity.ok(perfil);
   }
 
@@ -30,8 +30,8 @@ public class UsuarioController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<UsuarioResponseDTO> updateMiPerfil(
       Principal principal, @Valid @RequestBody UsuarioUpdateDTO updateDto) {
-    String usernameActual = principal.getName();
-    UsuarioResponseDTO perfilActualizado = usuarioService.updateMiPerfil(usernameActual, updateDto);
+    Long userId = Long.parseLong(principal.getName());
+    UsuarioResponseDTO perfilActualizado = usuarioService.updateMiPerfilById(userId, updateDto);
     return ResponseEntity.ok(perfilActualizado);
   }
 
@@ -39,8 +39,8 @@ public class UsuarioController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<String> updateMyPassword(
       Principal principal, @Valid @RequestBody PasswordChangeDTO passwordDto) {
-    String usernameActual = principal.getName();
-    usuarioService.changePassword(usernameActual, passwordDto);
+    Long userId = Long.parseLong(principal.getName());
+    usuarioService.changePasswordById(userId, passwordDto);
     return ResponseEntity.ok().body("Contraseña actualizada con éxito.");
   }
 
@@ -48,15 +48,12 @@ public class UsuarioController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<UsuarioResponseDTO> updateFotoPerfil(
       Principal principal, @RequestBody Map<String, String> body) {
-
-    String username = principal.getName();
+    Long userId = Long.parseLong(principal.getName());
     String fotoUrl = body.get("url");
-
     if (fotoUrl == null || fotoUrl.isBlank()) {
       return ResponseEntity.badRequest().build();
     }
-
-    UsuarioResponseDTO perfilActualizado = usuarioService.updateFotoPerfil(username, fotoUrl);
+    UsuarioResponseDTO perfilActualizado = usuarioService.updateFotoPerfilById(userId, fotoUrl);
     return ResponseEntity.ok(perfilActualizado);
   }
 }

@@ -15,6 +15,20 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
+  public UserDetails loadUserById(Long userId) throws UsernameNotFoundException {
+    Usuario usuario = usuarioRepository.findById(userId)
+        .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con id: " + userId));
+
+    Set<GrantedAuthority> authorities = new HashSet<>();
+    authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+    if (usuario.esAdmin()) {
+      authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+      authorities.add(new SimpleGrantedAuthority("ROLE_MODERADOR"));
+    } else if (usuario.esMod()) {
+      authorities.add(new SimpleGrantedAuthority("ROLE_MODERADOR"));
+    }
+    return new User(userId.toString(), usuario.getPassword(), authorities);
+  }
 
   @Autowired private UsuarioRepository usuarioRepository;
 

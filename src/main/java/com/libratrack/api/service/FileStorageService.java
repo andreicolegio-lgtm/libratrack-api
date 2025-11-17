@@ -22,7 +22,7 @@ public class FileStorageService {
   public String storeFile(MultipartFile file) {
 
     if (file.isEmpty()) {
-      throw new RuntimeException("Error: El archivo está vacío.");
+      throw new RuntimeException("FILE_EMPTY");
     }
 
     String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
@@ -30,8 +30,7 @@ public class FileStorageService {
 
     try {
       if (originalFileName.contains("..")) {
-        throw new RuntimeException(
-            "El nombre del archivo contiene una secuencia de ruta inválida.");
+        throw new RuntimeException("INVALID_FILE_NAME");
       }
 
       int dotIndex = originalFileName.lastIndexOf('.');
@@ -49,7 +48,7 @@ public class FileStorageService {
       return "https://storage.googleapis.com/" + bucketName + "/" + uniqueFileName;
 
     } catch (IOException e) {
-      throw new RuntimeException("No se pudo guardar el archivo. Error: " + e.getMessage());
+      throw new RuntimeException("FILE_SAVE_ERROR");
     }
   }
 }

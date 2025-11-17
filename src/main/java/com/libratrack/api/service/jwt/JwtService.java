@@ -22,15 +22,15 @@ public class JwtService {
   @Value("${libratrack.app.jwtAccessExpirationMs}")
   private Long jwtAccessExpirationMs;
 
-  public String generateToken(String username) {
+  public String generateToken(Long userId) {
     Map<String, Object> claims = new HashMap<>();
-    return createToken(claims, username);
+    return createToken(claims, userId.toString());
   }
 
-  private String createToken(Map<String, Object> claims, String username) {
+  private String createToken(Map<String, Object> claims, String userId) {
     return Jwts.builder()
         .claims(claims)
-        .subject(username)
+        .subject(userId)
         .issuedAt(new Date(System.currentTimeMillis()))
         .expiration(new Date(System.currentTimeMillis() + jwtAccessExpirationMs))
         .signWith(getSignKey())
@@ -42,13 +42,14 @@ public class JwtService {
     return Keys.hmacShaKeyFor(keyBytes);
   }
 
-  public String extractUsername(String token) {
-    return extractClaim(token, Claims::getSubject);
+  public Long extractUserId(String token) {
+    String sub = extractClaim(token, Claims::getSubject);
+    return Long.parseLong(sub);
   }
 
   public Boolean validateToken(String token, UserDetails userDetails) {
-    final String username = extractUsername(token);
-    return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    final Long userId = extractUserId(token);
+    return (userId.toString().equals(userDetails.getUsername()) && !isTokenExpired(token));
   }
 
   private Boolean isTokenExpired(String token) {

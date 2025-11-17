@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,7 +30,7 @@ public class GlobalExceptionHandler {
     Map<String, Object> body = new HashMap<>();
     body.put("timestamp", new Date());
     body.put("status", HttpStatus.FORBIDDEN.value());
-    body.put("error", "FORBIDDEN");
+    body.put("error", "E_ACCESS_DENIED");
     body.put("message", "No tienes permiso para acceder a este recurso.");
     body.put("path", request.getDescription(false).substring(4));
 
@@ -42,7 +43,7 @@ public class GlobalExceptionHandler {
     Map<String, Object> body = new HashMap<>();
     body.put("timestamp", new Date());
     body.put("status", HttpStatus.NOT_FOUND.value());
-    body.put("error", "RESOURCE_NOT_FOUND");
+    body.put("error", ex.getMessage());
     body.put("details", ex.getMessage());
     body.put("path", request.getDescription(false).substring(4));
 
@@ -55,7 +56,7 @@ public class GlobalExceptionHandler {
     Map<String, Object> body = new HashMap<>();
     body.put("timestamp", new Date());
     body.put("status", HttpStatus.CONFLICT.value());
-    body.put("error", ex.getMessage()); // Already a key
+    body.put("error", ex.getMessage());
     body.put("path", request.getDescription(false).substring(4));
 
     return new ResponseEntity<>(body, HttpStatus.CONFLICT);
@@ -64,17 +65,20 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Map<String, Object>> handleValidationExceptions(
       MethodArgumentNotValidException ex, WebRequest request) {
-    Map<String, String> errors = new HashMap<>();
-    ex.getBindingResult()
-        .getFieldErrors()
-        .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+
+    String firstErrorKey = "VALIDATION_ERROR";
+    if (ex.getBindingResult().hasFieldErrors()) {
+      FieldError firstError = ex.getBindingResult().getFieldErrors().get(0);
+      if (firstError.getDefaultMessage() != null) {
+        firstErrorKey = firstError.getDefaultMessage();
+      }
+    }
 
     Map<String, Object> body = new HashMap<>();
     body.put("timestamp", new Date());
     body.put("status", HttpStatus.BAD_REQUEST.value());
-    body.put("error", "VALIDATION_ERROR");
+    body.put("error", firstErrorKey);
     body.put("message", "Error de validación");
-    body.put("errors", errors);
     body.put("path", request.getDescription(false).substring(4));
 
     return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);

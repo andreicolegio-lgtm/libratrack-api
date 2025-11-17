@@ -7,18 +7,18 @@ import java.util.List;
 
 public class ElementoFormDTO {
 
-  @NotBlank(message = "El título no puede estar vacío")
+  @NotBlank(message = "VALIDATION_TITLE_REQUIRED")
   @Size(max = 255)
   private String titulo;
 
-  @NotBlank(message = "La descripción no puede estar vacía")
+  @NotBlank(message = "VALIDATION_DESC_REQUIRED")
   @Size(max = 5000)
   private String descripcion;
 
-  @NotBlank(message = "El tipo no puede estar vacío")
+  @NotBlank(message = "VALIDATION_TYPE_REQUIRED")
   private String tipoNombre;
 
-  @NotBlank(message = "Los géneros no pueden estar vacíos")
+  @NotBlank(message = "VALIDATION_GENRES_REQUIRED")
   private String generosNombres;
 
   @Size(max = 255)

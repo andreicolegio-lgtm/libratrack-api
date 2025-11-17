@@ -4,10 +4,10 @@ import jakarta.validation.constraints.NotNull;
 
 public class RolUpdateDTO {
 
-  @NotNull(message = "Debe especificar el estado de moderador")
+  @NotNull(message = "VALIDATION_MOD_STATUS_REQUIRED")
   private Boolean esModerador;
 
-  @NotNull(message = "Debe especificar el estado de administrador")
+  @NotNull(message = "VALIDATION_ADMIN_STATUS_REQUIRED")
   private Boolean esAdministrador;
 
   public Boolean getEsModerador() {

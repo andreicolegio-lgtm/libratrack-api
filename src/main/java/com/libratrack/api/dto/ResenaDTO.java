@@ -7,15 +7,15 @@ import jakarta.validation.constraints.Size;
 
 public class ResenaDTO {
 
-  @NotNull(message = "El ID del elemento no puede ser nulo")
+  @NotNull(message = "VALIDATION_ELEMENT_ID_REQUIRED")
   private Long elementoId;
 
-  @NotNull(message = "La valoración no puede ser nula")
-  @Min(value = 1, message = "La valoración mínima es 1")
-  @Max(value = 5, message = "La valoración máxima es 5")
+  @NotNull(message = "VALIDATION_RATING_REQUIRED")
+  @Min(value = 1, message = "VALIDATION_RATING_MIN_1")
+  @Max(value = 5, message = "VALIDATION_RATING_MAX_5")
   private Integer valoracion;
 
-  @Size(max = 2000, message = "La reseña no puede exceder los 2000 caracteres")
+  @Size(max = 2000, message = "VALIDATION_REVIEW_MAX_2000")
   private String textoResena;
 
   public Long getElementoId() {

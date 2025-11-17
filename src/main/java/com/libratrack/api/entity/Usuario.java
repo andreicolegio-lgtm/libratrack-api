@@ -14,17 +14,17 @@ public class Usuario {
   private Long id;
 
   @Column(unique = true, nullable = false, length = 50)
-  @NotBlank(message = "El nombre de usuario no puede estar vacío")
-  @Size(min = 4, max = 50, message = "El nombre de usuario debe tener entre 4 y 50 caracteres")
+  @NotBlank(message = "VALIDATION_USERNAME_REQUIRED")
+  @Size(min = 4, max = 50, message = "VALIDATION_USERNAME_LENGTH_4_50")
   private String username;
 
   @Column(unique = true, nullable = false, length = 100)
-  @NotBlank(message = "El email no puede estar vacío")
-  @Email(message = "Debe ser un formato de email válido")
+  @NotBlank(message = "VALIDATION_EMAIL_REQUIRED")
+  @Email(message = "VALIDATION_EMAIL_INVALID")
   private String email;
 
   @Column(nullable = false)
-  @NotBlank(message = "La contraseña no puede estar vacío")
+  @NotBlank(message = "VALIDATION_PASSWORD_REQUIRED")
   private String password;
 
   @Column(nullable = false)

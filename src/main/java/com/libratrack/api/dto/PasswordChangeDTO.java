@@ -5,11 +5,11 @@ import jakarta.validation.constraints.Size;
 
 public class PasswordChangeDTO {
 
-  @NotBlank(message = "La contraseña actual no puede estar vacía")
+  @NotBlank(message = "VALIDATION_PASSWORD_CURRENT_REQUIRED")
   private String contraseñaActual;
 
-  @NotBlank(message = "La nueva contraseña no puede estar vacía")
-  @Size(min = 8, message = "La nueva contraseña debe tener al menos 8 caracteres")
+  @NotBlank(message = "VALIDATION_PASSWORD_NEW_REQUIRED")
+  @Size(min = 8, message = "VALIDATION_PASSWORD_MIN_8")
   private String nuevaContraseña;
 
   public String getContraseñaActual() {

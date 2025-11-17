@@ -6,16 +6,19 @@ import jakarta.validation.constraints.Size;
 
 public class PropuestaUpdateDTO {
 
-  @NotBlank
+  @NotBlank(message = "VALIDATION_TITLE_REQUIRED")
   @Size(max = 255)
   private String tituloSugerido;
 
-  @NotBlank
+  @NotBlank(message = "VALIDATION_DESC_REQUIRED")
   @Size(max = 5000)
   private String descripcionSugerida;
 
-  @NotBlank private String tipoSugerido;
-  @NotBlank private String generosSugeridos;
+  @NotBlank(message = "VALIDATION_TYPE_REQUIRED")
+  private String tipoSugerido;
+
+  @NotBlank(message = "VALIDATION_GENRES_REQUIRED")
+  private String generosSugeridos;
 
   @Size(max = 255)
   private String urlImagen;

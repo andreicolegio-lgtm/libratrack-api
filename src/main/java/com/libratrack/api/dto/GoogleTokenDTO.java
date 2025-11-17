@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class GoogleTokenDTO {
 
-  @NotBlank(message = "El token de Google no puede estar vacío")
+  @NotBlank(message = "VALIDATION_GOOGLE_TOKEN_REQUIRED")
   private String token;
 
   public String getToken() {

@@ -1,5 +1,6 @@
 package com.libratrack.api.config.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.libratrack.api.service.UserDetailsServiceImpl;
 import com.libratrack.api.service.jwt.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -8,9 +9,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,6 +32,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
   @Autowired private JwtService jwtService;
 
   @Autowired private UserDetailsServiceImpl userDetailsServiceImpl;
+
+  @Autowired private ObjectMapper objectMapper;
+
+  private void sendJsonError(
+      HttpServletResponse response, HttpStatus status, String errorKey, String message)
+      throws IOException {
+    response.setStatus(status.value());
+    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+    Map<String, Object> body = new HashMap<>();
+    body.put("timestamp", new Date());
+    body.put("status", status.value());
+    body.put("error", errorKey);
+    body.put("message", message);
+
+    response.getWriter().write(objectMapper.writeValueAsString(body));
+  }
 
   @Override
   protected void doFilterInternal(
@@ -48,13 +71,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       userId = jwtService.extractUserId(token);
     } catch (ExpiredJwtException e) {
       logger.warn("JWT Token has expired: {}", e.getMessage());
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-      response.getWriter().write("Token JWT caducado");
+      sendJsonError(response, HttpStatus.UNAUTHORIZED, "E_TOKEN_EXPIRED", "Token JWT caducado");
       return;
     } catch (Exception e) {
       logger.warn("Failed to extract userId from token: {}", e.getMessage());
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-      response.getWriter().write("Token JWT inválido");
+      sendJsonError(response, HttpStatus.UNAUTHORIZED, "E_TOKEN_INVALID", "Token JWT inválido");
       return;
     }
 

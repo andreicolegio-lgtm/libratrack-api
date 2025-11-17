@@ -9,6 +9,7 @@ import com.libratrack.api.dto.LoginResponseDTO;
 import com.libratrack.api.dto.UsuarioResponseDTO;
 import com.libratrack.api.entity.RefreshToken;
 import com.libratrack.api.entity.Usuario;
+import com.libratrack.api.exception.ConflictException;
 import com.libratrack.api.exception.TokenRefreshException;
 import com.libratrack.api.repository.UsuarioRepository;
 import com.libratrack.api.service.RefreshTokenService;
@@ -29,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -94,15 +96,14 @@ public class AuthController {
     String password = loginRequest.getOrDefault("password", "").trim();
 
     if (email.isEmpty() || password.isEmpty()) {
-      return new ResponseEntity<>(
-          "El email y la contraseña no pueden estar vacíos.", HttpStatus.BAD_REQUEST);
+      throw new ConflictException("E_INVALID_CREDENTIALS");
     }
 
     try {
       Usuario usuario =
           usuarioRepository
               .findByEmail(email)
-              .orElseThrow(() -> new IllegalArgumentException("Usuario o contraseña incorrectos."));
+              .orElseThrow(() -> new UsernameNotFoundException("E_INVALID_CREDENTIALS"));
 
       String username = usuario.getUsername();
 
@@ -116,13 +117,9 @@ public class AuthController {
       return new ResponseEntity<>(
           new LoginResponseDTO(accessToken, refreshToken.getToken()), HttpStatus.OK);
 
-    } catch (IllegalArgumentException e) {
-      logger.warn("Login failed (email not found): {}", email);
-      return new ResponseEntity<>("Usuario o contraseña incorrectos.", HttpStatus.UNAUTHORIZED);
-
-    } catch (BadCredentialsException e) {
-      logger.warn("Login failed (bad credentials) for email: {}", email);
-      return new ResponseEntity<>("Usuario o contraseña incorrectos.", HttpStatus.UNAUTHORIZED);
+    } catch (UsernameNotFoundException | BadCredentialsException e) {
+      logger.warn("Login failed (BadCredentials) for email: {}", email);
+      throw new ConflictException("E_INVALID_CREDENTIALS");
 
     } catch (Exception e) {
       logger.error("Unexpected error during login for email: {}", email, e);

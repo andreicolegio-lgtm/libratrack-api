@@ -3,10 +3,7 @@ package com.libratrack.api.controller;
 import com.libratrack.api.dto.ElementoResponseDTO;
 import com.libratrack.api.dto.PropuestaResponseDTO;
 import com.libratrack.api.dto.PropuestaUpdateDTO;
-import com.libratrack.api.entity.Usuario;
-import com.libratrack.api.exception.ResourceNotFoundException;
 import com.libratrack.api.model.EstadoPropuesta;
-import com.libratrack.api.repository.UsuarioRepository;
 import com.libratrack.api.service.PropuestaElementoService;
 import jakarta.validation.Valid;
 import java.security.Principal;
@@ -22,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 public class ModeracionController {
 
   @Autowired private PropuestaElementoService propuestaService;
-  @Autowired private UsuarioRepository usuarioRepo;
 
   @GetMapping
   public ResponseEntity<List<PropuestaResponseDTO>> getPropuestasPorEstado(
@@ -45,16 +41,7 @@ public class ModeracionController {
       @Valid @RequestBody PropuestaUpdateDTO dto,
       Principal principal) {
 
-    String revisorUsername = principal.getName();
-    Usuario revisor =
-        usuarioRepo
-            .findByUsername(revisorUsername)
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException(
-                        "Token de revisor inválido. Usuario no encontrado."));
-
-    Long revisorId = revisor.getId();
+    Long revisorId = Long.parseLong(principal.getName());
 
     ElementoResponseDTO nuevoElemento =
         propuestaService.aprobarPropuesta(propuestaId, revisorId, dto);

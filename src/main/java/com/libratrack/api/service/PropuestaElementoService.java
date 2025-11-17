@@ -29,10 +29,10 @@ public class PropuestaElementoService {
   @Autowired private GeneroRepository generoRepository;
 
   @Transactional
-  public PropuestaResponseDTO createPropuesta(PropuestaRequestDTO dto, String proponenteUsername) {
+  public PropuestaResponseDTO createPropuesta(PropuestaRequestDTO dto, Long proponenteId) {
     Usuario proponente =
         usuarioRepo
-            .findByUsername(proponenteUsername)
+            .findById(proponenteId)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario proponente no encontrado."));
 
     PropuestaElemento nuevaPropuesta = new PropuestaElemento();

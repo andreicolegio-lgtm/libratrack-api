@@ -38,7 +38,7 @@ public class RefreshTokenService {
     Usuario usuario =
         usuarioRepository
             .findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + username));
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
 
     RefreshToken refreshToken = new RefreshToken();
 
@@ -53,8 +53,7 @@ public class RefreshTokenService {
   public RefreshToken verifyExpiration(RefreshToken token) {
     if (token.getFechaExpiracion().compareTo(Instant.now()) < 0) {
       refreshTokenRepository.delete(token);
-      throw new TokenRefreshException(
-          token.getToken(), "Token de refresco caducado. Por favor, inicie sesión de nuevo.");
+      throw new TokenRefreshException(token.getToken(), "E_REFRESH_TOKEN_EXPIRED");
     }
     return token;
   }

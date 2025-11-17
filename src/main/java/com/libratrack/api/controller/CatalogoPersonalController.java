@@ -20,9 +20,9 @@ public class CatalogoPersonalController {
 
   @GetMapping
   public ResponseEntity<List<CatalogoPersonalResponseDTO>> getMiCatalogo(Principal principal) {
-    String username = principal.getName();
+    Long userId = Long.parseLong(principal.getName());
 
-    List<CatalogoPersonalResponseDTO> catalogo = catalogoService.getCatalogoByUsername(username);
+    List<CatalogoPersonalResponseDTO> catalogo = catalogoService.getCatalogoByUserId(userId);
     return ResponseEntity.ok(catalogo);
   }
 
@@ -30,8 +30,10 @@ public class CatalogoPersonalController {
   public ResponseEntity<CatalogoPersonalResponseDTO> addElementoAlCatalogo(
       @PathVariable Long elementoId, Principal principal) {
 
+    Long userId = Long.parseLong(principal.getName());
+
     CatalogoPersonalResponseDTO nuevaEntrada =
-        catalogoService.addElementoAlCatalogo(principal.getName(), elementoId);
+        catalogoService.addElementoAlCatalogo(userId, elementoId);
     return new ResponseEntity<>(nuevaEntrada, HttpStatus.CREATED);
   }
 
@@ -39,8 +41,10 @@ public class CatalogoPersonalController {
   public ResponseEntity<CatalogoPersonalResponseDTO> updateElementoDelCatalogo(
       @PathVariable Long elementoId, @RequestBody CatalogoUpdateDTO dto, Principal principal) {
 
+    Long userId = Long.parseLong(principal.getName());
+
     CatalogoPersonalResponseDTO entradaActualizada =
-        catalogoService.updateEntradaCatalogo(principal.getName(), elementoId, dto);
+        catalogoService.updateEntradaCatalogo(userId, elementoId, dto);
     return ResponseEntity.ok(entradaActualizada);
   }
 
@@ -48,7 +52,9 @@ public class CatalogoPersonalController {
   public ResponseEntity<Void> removeElementoDelCatalogo(
       @PathVariable Long elementoId, Principal principal) {
 
-    catalogoService.removeElementoDelCatalogo(principal.getName(), elementoId);
+    Long userId = Long.parseLong(principal.getName());
+
+    catalogoService.removeElementoDelCatalogo(userId, elementoId);
     return ResponseEntity.noContent().build();
   }
 }

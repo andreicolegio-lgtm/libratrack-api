@@ -36,11 +36,11 @@ public class ResenaService {
   }
 
   @Transactional
-  public ResenaResponseDTO createResena(ResenaDTO dto, String username) {
+  public ResenaResponseDTO createResena(ResenaDTO dto, Long userId) {
 
     Usuario usuario =
         usuarioRepo
-            .findByUsername(username)
+            .findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
 
     Elemento elemento =

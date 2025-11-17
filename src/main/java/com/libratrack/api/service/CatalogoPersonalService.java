@@ -25,18 +25,18 @@ public class CatalogoPersonalService {
   @Autowired private ElementoRepository elementoRepo;
 
   @Transactional(readOnly = true)
-  public List<CatalogoPersonalResponseDTO> getCatalogoByUsername(String username) {
-    List<CatalogoPersonal> catalogo = catalogoRepo.findByUsuario_Username(username);
+  public List<CatalogoPersonalResponseDTO> getCatalogoByUserId(Long userId) {
+    List<CatalogoPersonal> catalogo = catalogoRepo.findByUsuarioId(userId);
 
     return catalogo.stream().map(CatalogoPersonalResponseDTO::new).collect(Collectors.toList());
   }
 
   @Transactional
-  public CatalogoPersonalResponseDTO addElementoAlCatalogo(String username, Long elementoId) {
+  public CatalogoPersonalResponseDTO addElementoAlCatalogo(Long userId, Long elementoId) {
 
     Usuario usuario =
         usuarioRepo
-            .findByUsername(username)
+            .findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado."));
     Elemento elemento =
         elementoRepo
@@ -62,11 +62,11 @@ public class CatalogoPersonalService {
 
   @Transactional
   public CatalogoPersonalResponseDTO updateEntradaCatalogo(
-      String username, Long elementoId, CatalogoUpdateDTO dto) {
+      Long userId, Long elementoId, CatalogoUpdateDTO dto) {
 
     CatalogoPersonal entrada =
         catalogoRepo
-            .findByUsuario_UsernameAndElemento_Id(username, elementoId)
+            .findByUsuarioIdAndElementoId(userId, elementoId)
             .orElseThrow(
                 () ->
                     new ResourceNotFoundException(
@@ -94,11 +94,11 @@ public class CatalogoPersonalService {
   }
 
   @Transactional
-  public void removeElementoDelCatalogo(String username, Long elementoId) {
+  public void removeElementoDelCatalogo(Long userId, Long elementoId) {
 
     CatalogoPersonal entrada =
         catalogoRepo
-            .findByUsuario_UsernameAndElemento_Id(username, elementoId)
+            .findByUsuarioIdAndElementoId(userId, elementoId)
             .orElseThrow(
                 () ->
                     new ResourceNotFoundException(

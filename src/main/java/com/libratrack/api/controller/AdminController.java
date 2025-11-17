@@ -53,8 +53,9 @@ public class AdminController {
   public ResponseEntity<ElementoResponseDTO> crearElementoOficial(
       @Valid @RequestBody ElementoFormDTO dto, Principal principal) {
 
-    ElementoResponseDTO nuevoElemento =
-        elementoService.crearElementoOficial(dto, principal.getName());
+    Long adminId = Long.parseLong(principal.getName());
+
+    ElementoResponseDTO nuevoElemento = elementoService.crearElementoOficial(dto, adminId);
     return new ResponseEntity<>(nuevoElemento, HttpStatus.CREATED);
   }
 

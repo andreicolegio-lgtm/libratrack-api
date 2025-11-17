@@ -11,9 +11,5 @@ public interface CatalogoPersonalRepository extends JpaRepository<CatalogoPerson
 
   List<CatalogoPersonal> findByUsuarioId(Long usuarioId);
 
-  List<CatalogoPersonal> findByUsuario_Username(String username);
-
   Optional<CatalogoPersonal> findByUsuarioIdAndElementoId(Long usuarioId, Long elementoId);
-
-  Optional<CatalogoPersonal> findByUsuario_UsernameAndElemento_Id(String username, Long elementoId);
 }

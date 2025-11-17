@@ -68,11 +68,11 @@ public class ElementoService {
   }
 
   @Transactional
-  public ElementoResponseDTO crearElementoOficial(ElementoFormDTO dto, String adminUsername) {
+  public ElementoResponseDTO crearElementoOficial(ElementoFormDTO dto, Long adminId) {
     Usuario admin =
         usuarioRepository
-            .findByUsername(adminUsername)
-            .orElseThrow(() -> new ResourceNotFoundException("ADMIN_NOT_FOUND"));
+            .findById(adminId)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
 
     Elemento nuevoElemento = new Elemento();
 
@@ -99,7 +99,7 @@ public class ElementoService {
     Elemento elementoGuardado = elementoRepository.save(elemento);
 
     return findElementoById(elementoGuardado.getId())
-        .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_RELOAD_ERROR"));
+        .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
   }
 
   @Transactional
@@ -111,7 +111,7 @@ public class ElementoService {
     elemento.setEstadoContenido(EstadoContenido.OFICIAL);
     Elemento elementoGuardado = elementoRepository.save(elemento);
     return findElementoById(elementoGuardado.getId())
-        .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_RELOAD_ERROR"));
+        .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
   }
 
   @Transactional
@@ -123,7 +123,7 @@ public class ElementoService {
     elemento.setEstadoContenido(EstadoContenido.COMUNITARIO);
     Elemento elementoGuardado = elementoRepository.save(elemento);
     return findElementoById(elementoGuardado.getId())
-        .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_RELOAD_ERROR"));
+        .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
   }
 
   private void mapElementoFromFormDTO(Elemento elemento, ElementoFormDTO dto) {

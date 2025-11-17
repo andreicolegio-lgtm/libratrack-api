@@ -60,7 +60,8 @@ public class AuthController {
       GoogleIdToken idToken = verifier.verify(googleTokenDTO.getToken());
       if (idToken == null) {
         logger.warn("Intento de login con token de Google inválido.");
-        return new ResponseEntity<>("Token de Google inválido.", HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(
+            Map.of("error", "E_GOOGLE_TOKEN_INVALID"), HttpStatus.UNAUTHORIZED);
       }
 
       GoogleIdToken.Payload payload = idToken.getPayload();
@@ -77,10 +78,11 @@ public class AuthController {
     } catch (GeneralSecurityException | IOException e) {
       logger.error("Error al verificar el token de Google: {}", e.getMessage());
       return new ResponseEntity<>(
-          "Error al verificar el token de Google.", HttpStatus.INTERNAL_SERVER_ERROR);
+          Map.of("error", "E_GOOGLE_TOKEN_ERROR"), HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (Exception e) {
       logger.error("Error inesperado en login con Google: {}", e.getMessage(), e);
-      return new ResponseEntity<>("Error interno del servidor.", HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<>(
+          Map.of("error", "INTERNAL_SERVER_ERROR"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -123,7 +125,8 @@ public class AuthController {
 
     } catch (Exception e) {
       logger.error("Unexpected error during login for email: {}", email, e);
-      return new ResponseEntity<>("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<>(
+          Map.of("error", "INTERNAL_SERVER_ERROR"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -132,7 +135,8 @@ public class AuthController {
     String requestRefreshToken = request.get("refreshToken");
 
     if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
-      return new ResponseEntity<>("Se requiere un Refresh Token.", HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>(
+          Map.of("error", "E_REFRESH_TOKEN_REQUIRED"), HttpStatus.BAD_REQUEST);
     }
 
     try {
@@ -141,8 +145,7 @@ public class AuthController {
               .findByToken(requestRefreshToken)
               .orElseThrow(
                   () ->
-                      new TokenRefreshException(
-                          requestRefreshToken, "Refresh token no encontrado en la base de datos."));
+                      new TokenRefreshException(requestRefreshToken, "E_REFRESH_TOKEN_NOT_FOUND"));
 
       refreshTokenService.verifyExpiration(refreshToken);
       Usuario usuario = refreshToken.getUsuario();
@@ -152,7 +155,7 @@ public class AuthController {
 
     } catch (TokenRefreshException e) {
       logger.warn("Intento de refresco fallido: {}", e.getMessage());
-      return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+      return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.FORBIDDEN);
     }
   }
 
@@ -161,21 +164,21 @@ public class AuthController {
     String requestRefreshToken = request.get("refreshToken");
 
     if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
-      return new ResponseEntity<>("Se requiere un Refresh Token.", HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>(
+          Map.of("error", "E_REFRESH_TOKEN_REQUIRED"), HttpStatus.BAD_REQUEST);
     }
 
     try {
       refreshTokenService.deleteByToken(requestRefreshToken);
 
       Map<String, String> response = new HashMap<>();
-      response.put("message", "Cierre de sesión exitoso.");
+      response.put("message", "LOGOUT_SUCCESSFUL");
 
       return ResponseEntity.ok(response);
     } catch (Exception e) {
       logger.error("Error during logout", e);
       return new ResponseEntity<>(
-          "Error interno del servidor durante el cierre de sesión.",
-          HttpStatus.INTERNAL_SERVER_ERROR);
+          Map.of("error", "INTERNAL_SERVER_ERROR"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

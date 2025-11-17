@@ -32,9 +32,9 @@ public class ResenaController {
   public ResponseEntity<ResenaResponseDTO> createResena(
       @Valid @RequestBody ResenaDTO resenaDTO, Principal principal) {
 
-    String username = principal.getName();
+    Long userId = Long.parseLong(principal.getName());
 
-    ResenaResponseDTO nuevaResena = resenaService.createResena(resenaDTO, username);
+    ResenaResponseDTO nuevaResena = resenaService.createResena(resenaDTO, userId);
 
     return new ResponseEntity<>(nuevaResena, HttpStatus.CREATED);
   }

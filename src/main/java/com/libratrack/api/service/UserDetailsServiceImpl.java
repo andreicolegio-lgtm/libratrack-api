@@ -1,6 +1,7 @@
 package com.libratrack.api.service;
 
 import com.libratrack.api.entity.Usuario;
+import com.libratrack.api.exception.ResourceNotFoundException;
 import com.libratrack.api.repository.UsuarioRepository;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,10 +18,9 @@ import org.springframework.stereotype.Service;
 public class UserDetailsServiceImpl implements UserDetailsService {
   public UserDetails loadUserById(Long userId) throws UsernameNotFoundException {
     Usuario usuario =
-      usuarioRepository
-        .findById(userId)
-        .orElseThrow(
-          () -> new UsernameNotFoundException("USER_NOT_FOUND_BY_ID:" + userId));
+        usuarioRepository
+            .findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
 
     Set<GrantedAuthority> authorities = new HashSet<>();
     authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
@@ -39,12 +39,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
     Usuario usuario =
-      usuarioRepository
-        .findByUsername(username)
-        .orElseThrow(
-          () ->
-            new UsernameNotFoundException(
-              "USER_NOT_FOUND_BY_USERNAME:" + username));
+        usuarioRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("E_INVALID_CREDENTIALS"));
 
     Set<GrantedAuthority> authorities = new HashSet<>();
 

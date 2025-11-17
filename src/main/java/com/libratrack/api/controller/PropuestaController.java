@@ -22,9 +22,9 @@ public class PropuestaController {
   public ResponseEntity<PropuestaResponseDTO> createPropuesta(
       @Valid @RequestBody PropuestaRequestDTO dto, Principal principal) {
 
-    String username = principal.getName();
+    Long userId = Long.parseLong(principal.getName());
 
-    PropuestaResponseDTO nuevaPropuesta = propuestaService.createPropuesta(dto, username);
+    PropuestaResponseDTO nuevaPropuesta = propuestaService.createPropuesta(dto, userId);
 
     return new ResponseEntity<>(nuevaPropuesta, HttpStatus.CREATED);
   }

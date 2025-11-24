@@ -50,13 +50,14 @@ public class JwtService {
 
   public Boolean validateToken(String token, UserDetails userDetails) {
     final Long userId = extractUserId(token);
-    
+
     // Validación robusta: Compara el ID del token con el ID del UserDetails personalizado
     if (userDetails instanceof CustomUserDetails) {
       return userId.equals(((CustomUserDetails) userDetails).getId()) && !isTokenExpired(token);
     }
-    
-    // Fallback por si acaso se usa UserDetails estándar (no debería ocurrir con la nueva estructura)
+
+    // Fallback por si acaso se usa UserDetails estándar (no debería ocurrir con la nueva
+    // estructura)
     return userId.toString().equals(userDetails.getUsername()) && !isTokenExpired(token);
   }
 

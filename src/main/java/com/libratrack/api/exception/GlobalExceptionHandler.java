@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -16,16 +18,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-  @Autowired
-  private MessageSource messageSource;
+  @Autowired private MessageSource messageSource;
 
   @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<Map<String, Object>> handleAccessDeniedException(
@@ -119,11 +118,14 @@ public class GlobalExceptionHandler {
       ConstraintViolationException ex, WebRequest request) {
     logger.warn("Validation failed: {}", ex.getMessage());
     logger.warn("Constraint violations:");
-    ex.getConstraintViolations().forEach(violation ->
-        logger.warn("Property: {} - Message: {} - Invalid Value: {}",
-            violation.getPropertyPath(),
-            violation.getMessage(),
-            violation.getInvalidValue()));
+    ex.getConstraintViolations()
+        .forEach(
+            violation ->
+                logger.warn(
+                    "Property: {} - Message: {} - Invalid Value: {}",
+                    violation.getPropertyPath(),
+                    violation.getMessage(),
+                    violation.getInvalidValue()));
 
     List<String> violations =
         ex.getConstraintViolations().stream()

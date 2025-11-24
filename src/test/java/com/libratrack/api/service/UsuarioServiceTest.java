@@ -7,6 +7,7 @@ import com.libratrack.api.dto.PasswordChangeDTO;
 import com.libratrack.api.entity.Usuario;
 import com.libratrack.api.exception.ConflictException;
 import com.libratrack.api.repository.UsuarioRepository;
+import java.util.Locale;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -15,99 +16,96 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Locale;
-
 class UsuarioServiceTest {
 
-    @Mock
-    private UsuarioRepository usuarioRepository;
+  @Mock private UsuarioRepository usuarioRepository;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+  @Mock private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private MessageSource messageSource;
+  @Mock private MessageSource messageSource;
 
-    @InjectMocks
-    private UsuarioService usuarioService;
+  @InjectMocks private UsuarioService usuarioService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        when(messageSource.getMessage(anyString(), any(), any(Locale.class))).thenReturn("Mocked Message");
-    }
+  @BeforeEach
+  void setUp() {
+    MockitoAnnotations.openMocks(this);
+    when(messageSource.getMessage(anyString(), any(), any(Locale.class)))
+        .thenReturn("Mocked Message");
+  }
 
-    @Test
-    void testChangePasswordById_ValidPassword() {
-        Long userId = 1L;
-        String oldPassword = "OldPassword123!";
-        String newPassword = "NewPassword123!";
+  @Test
+  void testChangePasswordById_ValidPassword() {
+    Long userId = 1L;
+    String oldPassword = "OldPassword123!";
+    String newPassword = "NewPassword123!";
 
-        Usuario usuario = new Usuario();
-        usuario.setId(userId);
-        usuario.setPassword("encodedOldPassword");
+    Usuario usuario = new Usuario();
+    usuario.setId(userId);
+    usuario.setPassword("encodedOldPassword");
 
-        PasswordChangeDTO passwordChangeDTO = new PasswordChangeDTO();
-        passwordChangeDTO.setContraseñaActual(oldPassword);
-        passwordChangeDTO.setNuevaContraseña(newPassword);
+    PasswordChangeDTO passwordChangeDTO = new PasswordChangeDTO();
+    passwordChangeDTO.setContraseñaActual(oldPassword);
+    passwordChangeDTO.setNuevaContraseña(newPassword);
 
-        when(usuarioRepository.findById(userId)).thenReturn(java.util.Optional.of(usuario));
-        when(passwordEncoder.matches(oldPassword, usuario.getPassword())).thenReturn(true);
-        when(passwordEncoder.encode(newPassword)).thenReturn("encodedNewPassword");
+    when(usuarioRepository.findById(userId)).thenReturn(java.util.Optional.of(usuario));
+    when(passwordEncoder.matches(oldPassword, usuario.getPassword())).thenReturn(true);
+    when(passwordEncoder.encode(newPassword)).thenReturn("encodedNewPassword");
 
-        assertDoesNotThrow(() -> usuarioService.changePasswordById(userId, passwordChangeDTO));
+    assertDoesNotThrow(() -> usuarioService.changePasswordById(userId, passwordChangeDTO));
 
-        verify(usuarioRepository).save(usuario);
-        assertEquals("encodedNewPassword", usuario.getPassword());
-    }
+    verify(usuarioRepository).save(usuario);
+    assertEquals("encodedNewPassword", usuario.getPassword());
+  }
 
-    @Test
-    void testChangePasswordById_InvalidPassword() {
-        Long userId = 1L;
-        String oldPassword = "OldPassword123!";
-        String newPassword = "weak";
+  @Test
+  void testChangePasswordById_InvalidPassword() {
+    Long userId = 1L;
+    String oldPassword = "OldPassword123!";
+    String newPassword = "weak";
 
-        Usuario usuario = new Usuario();
-        usuario.setId(userId);
-        usuario.setPassword("encodedOldPassword");
+    Usuario usuario = new Usuario();
+    usuario.setId(userId);
+    usuario.setPassword("encodedOldPassword");
 
-        PasswordChangeDTO passwordChangeDTO = new PasswordChangeDTO();
-        passwordChangeDTO.setContraseñaActual(oldPassword);
-        passwordChangeDTO.setNuevaContraseña(newPassword);
+    PasswordChangeDTO passwordChangeDTO = new PasswordChangeDTO();
+    passwordChangeDTO.setContraseñaActual(oldPassword);
+    passwordChangeDTO.setNuevaContraseña(newPassword);
 
-        when(usuarioRepository.findById(userId)).thenReturn(java.util.Optional.of(usuario));
-        when(passwordEncoder.matches(oldPassword, usuario.getPassword())).thenReturn(true);
+    when(usuarioRepository.findById(userId)).thenReturn(java.util.Optional.of(usuario));
+    when(passwordEncoder.matches(oldPassword, usuario.getPassword())).thenReturn(true);
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-            usuarioService.changePasswordById(userId, passwordChangeDTO)
-        );
+    Exception exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> usuarioService.changePasswordById(userId, passwordChangeDTO));
 
-        assertEquals("VALIDATION_PASSWORD_COMPLEXITY", exception.getMessage());
-        verify(usuarioRepository, never()).save(usuario);
-    }
+    assertEquals("VALIDATION_PASSWORD_COMPLEXITY", exception.getMessage());
+    verify(usuarioRepository, never()).save(usuario);
+  }
 
-    @Test
-    void testChangePasswordById_IncorrectCurrentPassword() {
-        Long userId = 1L;
-        String oldPassword = "WrongPassword123!";
-        String newPassword = "NewPassword123!";
+  @Test
+  void testChangePasswordById_IncorrectCurrentPassword() {
+    Long userId = 1L;
+    String oldPassword = "WrongPassword123!";
+    String newPassword = "NewPassword123!";
 
-        Usuario usuario = new Usuario();
-        usuario.setId(userId);
-        usuario.setPassword("encodedOldPassword");
+    Usuario usuario = new Usuario();
+    usuario.setId(userId);
+    usuario.setPassword("encodedOldPassword");
 
-        PasswordChangeDTO passwordChangeDTO = new PasswordChangeDTO();
-        passwordChangeDTO.setContraseñaActual(oldPassword);
-        passwordChangeDTO.setNuevaContraseña(newPassword);
+    PasswordChangeDTO passwordChangeDTO = new PasswordChangeDTO();
+    passwordChangeDTO.setContraseñaActual(oldPassword);
+    passwordChangeDTO.setNuevaContraseña(newPassword);
 
-        when(usuarioRepository.findById(userId)).thenReturn(java.util.Optional.of(usuario));
-        when(passwordEncoder.matches(oldPassword, usuario.getPassword())).thenReturn(false);
+    when(usuarioRepository.findById(userId)).thenReturn(java.util.Optional.of(usuario));
+    when(passwordEncoder.matches(oldPassword, usuario.getPassword())).thenReturn(false);
 
-        Exception exception = assertThrows(ConflictException.class, () ->
-            usuarioService.changePasswordById(userId, passwordChangeDTO)
-        );
+    Exception exception =
+        assertThrows(
+            ConflictException.class,
+            () -> usuarioService.changePasswordById(userId, passwordChangeDTO));
 
-        assertEquals("PASSWORD_INCORRECT", exception.getMessage());
-        verify(usuarioRepository, never()).save(usuario);
-    }
+    assertEquals("PASSWORD_INCORRECT", exception.getMessage());
+    verify(usuarioRepository, never()).save(usuario);
+  }
 }

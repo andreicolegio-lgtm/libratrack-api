@@ -1,5 +1,6 @@
 package com.libratrack.api.service.jwt;
 
+import com.libratrack.api.security.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
-  public static final String SECRET =
-      "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
+  @Value("${libratrack.app.jwtSecret}")
+  private String secret;
 
   @Value("${libratrack.app.jwtAccessExpirationMs}")
   private Long jwtAccessExpirationMs;
@@ -38,7 +39,7 @@ public class JwtService {
   }
 
   private SecretKey getSignKey() {
-    byte[] keyBytes = Decoders.BASE64.decode(SECRET);
+    byte[] keyBytes = Decoders.BASE64.decode(secret);
     return Keys.hmacShaKeyFor(keyBytes);
   }
 
@@ -49,7 +50,14 @@ public class JwtService {
 
   public Boolean validateToken(String token, UserDetails userDetails) {
     final Long userId = extractUserId(token);
-    return (userId.toString().equals(userDetails.getUsername()) && !isTokenExpired(token));
+    
+    // Validación robusta: Compara el ID del token con el ID del UserDetails personalizado
+    if (userDetails instanceof CustomUserDetails) {
+      return userId.equals(((CustomUserDetails) userDetails).getId()) && !isTokenExpired(token);
+    }
+    
+    // Fallback por si acaso se usa UserDetails estándar (no debería ocurrir con la nueva estructura)
+    return userId.toString().equals(userDetails.getUsername()) && !isTokenExpired(token);
   }
 
   private Boolean isTokenExpired(String token) {

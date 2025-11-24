@@ -3,12 +3,8 @@ package com.libratrack.api.service;
 import com.libratrack.api.entity.Usuario;
 import com.libratrack.api.exception.ResourceNotFoundException;
 import com.libratrack.api.repository.UsuarioRepository;
-import java.util.HashSet;
-import java.util.Set;
+import com.libratrack.api.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,44 +12,27 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
+
+  @Autowired private UsuarioRepository usuarioRepository;
+
+  // Método usado por el filtro JWT (autenticación por Token)
   public UserDetails loadUserById(Long userId) throws UsernameNotFoundException {
     Usuario usuario =
         usuarioRepository
             .findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
 
-    Set<GrantedAuthority> authorities = new HashSet<>();
-    authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-    if (usuario.esAdmin()) {
-      authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-      authorities.add(new SimpleGrantedAuthority("ROLE_MODERADOR"));
-    } else if (usuario.esMod()) {
-      authorities.add(new SimpleGrantedAuthority("ROLE_MODERADOR"));
-    }
-    return new User(userId.toString(), usuario.getPassword(), authorities);
+    return new CustomUserDetails(usuario);
   }
 
-  @Autowired private UsuarioRepository usuarioRepository;
-
+  // Método usado por el Login estándar (autenticación por credenciales)
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
     Usuario usuario =
         usuarioRepository
             .findByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("E_INVALID_CREDENTIALS"));
 
-    Set<GrantedAuthority> authorities = new HashSet<>();
-
-    authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-
-    if (usuario.esAdmin()) {
-      authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-      authorities.add(new SimpleGrantedAuthority("ROLE_MODERADOR"));
-    } else if (usuario.esMod()) {
-      authorities.add(new SimpleGrantedAuthority("ROLE_MODERADOR"));
-    }
-
-    return new User(usuario.getUsername(), usuario.getPassword(), authorities);
+    return new CustomUserDetails(usuario);
   }
 }

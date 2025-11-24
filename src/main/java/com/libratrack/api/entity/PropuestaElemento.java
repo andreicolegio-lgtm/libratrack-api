@@ -23,8 +23,8 @@ public class PropuestaElemento {
   private Usuario revisor;
 
   @Column(nullable = false)
-  @NotBlank(message = "El título no puede estar vacío")
-  @Size(max = 255)
+  @NotBlank(message = "VALIDATION_TITLE_REQUIRED")
+  @Size(max = 255, message = "VALIDATION_TITLE_MAX_255")
   private String tituloSugerido;
 
   @Lob
@@ -51,7 +51,7 @@ public class PropuestaElemento {
   @Column(nullable = false)
   private EstadoPropuesta estadoPropuesta = EstadoPropuesta.PENDIENTE;
 
-  @Size(max = 500)
+  @Size(max = 500, message = "VALIDATION_COMMENT_MAX_500")
   private String comentariosRevision;
 
   @Column(nullable = false, updatable = false)

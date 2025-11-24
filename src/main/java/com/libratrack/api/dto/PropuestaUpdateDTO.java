@@ -7,11 +7,11 @@ import jakarta.validation.constraints.Size;
 public class PropuestaUpdateDTO {
 
   @NotBlank(message = "VALIDATION_TITLE_REQUIRED")
-  @Size(max = 255)
+  @Size(max = 255, message = "VALIDATION_TITLE_MAX_255")
   private String tituloSugerido;
 
   @NotBlank(message = "VALIDATION_DESC_REQUIRED")
-  @Size(max = 5000)
+  @Size(max = 5000, message = "VALIDATION_DESC_MAX_5000")
   private String descripcionSugerida;
 
   @NotBlank(message = "VALIDATION_TYPE_REQUIRED")
@@ -23,16 +23,16 @@ public class PropuestaUpdateDTO {
   @Size(max = 255)
   private String urlImagen;
 
-  @Size(max = 255)
+  @Size(max = 255, message = "VALIDATION_EPISODES_STRING_MAX_255")
   private String episodiosPorTemporada;
 
-  @Min(value = 1)
+  @Min(value = 1, message = "VALIDATION_UNITS_MIN_1")
   private Integer totalUnidades;
 
-  @Min(value = 1)
+  @Min(value = 1, message = "VALIDATION_CHAPTERS_MIN_1")
   private Integer totalCapitulosLibro;
 
-  @Min(value = 1)
+  @Min(value = 1, message = "VALIDATION_PAGES_MIN_1")
   private Integer totalPaginasLibro;
 
   public String getTituloSugerido() {

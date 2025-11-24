@@ -7,16 +7,16 @@ public class CatalogoUpdateDTO {
 
   private EstadoPersonal estadoPersonal;
 
-  @Min(value = 1, message = "La temporada mínima es 1")
+  @Min(value = 1, message = "VALIDATION_SEASON_MIN_1")
   private Integer temporadaActual;
 
-  @Min(value = 0, message = "La unidad mínima es 0 (antes de empezar)")
+  @Min(value = 0, message = "VALIDATION_UNIT_MIN_0")
   private Integer unidadActual;
 
-  @Min(value = 0, message = "El capítulo mínimo es 0")
+  @Min(value = 0, message = "VALIDATION_CHAPTER_MIN_0")
   private Integer capituloActual;
 
-  @Min(value = 0, message = "La página mínima es 0")
+  @Min(value = 0, message = "VALIDATION_PAGE_MIN_0")
   private Integer paginaActual;
 
   public EstadoPersonal getEstadoPersonal() {

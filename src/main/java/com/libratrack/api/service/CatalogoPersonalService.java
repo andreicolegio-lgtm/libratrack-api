@@ -37,13 +37,11 @@ public class CatalogoPersonalService {
     Usuario usuario =
         usuarioRepo
             .findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
     Elemento elemento =
         elementoRepo
             .findById(elementoId)
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException("Elemento no encontrado con id: " + elementoId));
+            .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
 
     if (catalogoRepo.findByUsuarioIdAndElementoId(usuario.getId(), elemento.getId()).isPresent()) {
       throw new ConflictException("ALREADY_IN_CATALOG");
@@ -67,10 +65,7 @@ public class CatalogoPersonalService {
     CatalogoPersonal entrada =
         catalogoRepo
             .findByUsuarioIdAndElementoId(userId, elementoId)
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException(
-                        "Este elemento no está en tu catálogo (Elemento ID: " + elementoId + ")."));
+            .orElseThrow(() -> new ResourceNotFoundException("CATALOG_ENTRY_NOT_FOUND"));
 
     if (dto.getEstadoPersonal() != null) {
       entrada.setEstadoPersonal(dto.getEstadoPersonal());
@@ -99,10 +94,7 @@ public class CatalogoPersonalService {
     CatalogoPersonal entrada =
         catalogoRepo
             .findByUsuarioIdAndElementoId(userId, elementoId)
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException(
-                        "Este elemento no está en tu catálogo (Elemento ID: " + elementoId + ")."));
+            .orElseThrow(() -> new ResourceNotFoundException("CATALOG_ENTRY_NOT_FOUND"));
 
     catalogoRepo.delete(entrada);
   }

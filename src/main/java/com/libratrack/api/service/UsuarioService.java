@@ -11,19 +11,29 @@ import com.libratrack.api.exception.ResourceNotFoundException;
 import com.libratrack.api.repository.UsuarioRepository;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class UsuarioService {
+
+  private static final Logger logger = LoggerFactory.getLogger(UsuarioService.class);
+
   @Transactional(readOnly = true)
   public UsuarioResponseDTO getMiPerfilById(Long userId) {
     Usuario usuario =
@@ -51,20 +61,55 @@ public class UsuarioService {
     return new UsuarioResponseDTO(usuarioActualizado);
   }
 
-  public void changePasswordById(Long userId, PasswordChangeDTO passwordDto) {
+  private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+
+  private void validatePassword(String password) {
+    System.out.println("Validating password: " + password);
+    if (!password.matches(PASSWORD_REGEX)) {
+      System.out.println("Validation failed: Password does not meet complexity requirements");
+      throw new IllegalArgumentException("VALIDATION_PASSWORD_COMPLEXITY");
+    }
+    System.out.println("Validation passed");
+  }
+
+  @Autowired private MessageSource messageSource;
+
+  public ResponseEntity<Map<String, String>> changePasswordById(Long userId, PasswordChangeDTO passwordDto) {
     Usuario usuarioActual =
         usuarioRepository
             .findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
-    String contraseñaActualPlana = passwordDto.getContraseñaActual();
-    String contraseñaActualHasheada = usuarioActual.getPassword();
-    if (!passwordEncoder.matches(contraseñaActualPlana, contraseñaActualHasheada)) {
+            .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
+
+    // Log current password validation
+    String currentPassword = passwordDto.getContraseñaActual();
+    logger.info("Validating current password for user ID: {}", userId);
+    if (!passwordEncoder.matches(currentPassword, usuarioActual.getPassword())) {
+      logger.warn("Current password validation failed for user ID: {}", userId);
       throw new ConflictException("PASSWORD_INCORRECT");
     }
-    String nuevaContraseñaPlana = passwordDto.getNuevaContraseña();
-    String nuevaContraseñaHasheada = passwordEncoder.encode(nuevaContraseñaPlana);
-    usuarioActual.setPassword(nuevaContraseñaHasheada);
+
+    // Log new password comparison
+    String newPassword = passwordDto.getNuevaContraseña();
+    logger.info("Comparing new password with current password for user ID: {}", userId);
+    if (passwordEncoder.matches(newPassword, usuarioActual.getPassword())) {
+      logger.warn("New password matches current password for user ID: {}", userId);
+      throw new ConflictException("PASSWORD_UNCHANGED");
+    }
+
+    // Validate new password complexity
+    logger.info("Validating new password complexity for user ID: {}", userId);
+    validatePassword(newPassword);
+
+    // Update password
+    logger.info("Updating password for user ID: {}", userId);
+    String hashedNewPassword = passwordEncoder.encode(newPassword);
+    usuarioActual.setPassword(hashedNewPassword);
     usuarioRepository.save(usuarioActual);
+
+    Map<String, String> response = new HashMap<>();
+    response.put("message", messageSource.getMessage("password.updated", null, LocaleContextHolder.getLocale()));
+    logger.info("Password updated successfully for user ID: {}", userId);
+    return ResponseEntity.ok(response);
   }
 
   public UsuarioResponseDTO updateFotoPerfilById(Long userId, String fotoUrl) {

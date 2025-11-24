@@ -13,8 +13,8 @@ public class Genero {
   private Long id;
 
   @Column(unique = true, nullable = false, length = 50)
-  @NotBlank(message = "El nombre del género no puede estar vacío")
-  @Size(max = 50)
+  @NotBlank(message = "VALIDATION_GENRE_NAME_REQUIRED")
+  @Size(max = 50, message = "VALIDATION_GENRE_NAME_MAX_50")
   private String nombre;
 
   public Genero() {}

@@ -24,7 +24,7 @@ public class FileUploadController {
 
     } catch (Exception e) {
       return ResponseEntity.badRequest()
-          .body(Map.of("message", "Error al subir el archivo: " + e.getMessage()));
+          .body(Map.of("error", "FILE_UPLOAD_ERROR", "details", e.getMessage()));
     }
   }
 }

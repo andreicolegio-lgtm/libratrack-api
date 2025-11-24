@@ -13,8 +13,8 @@ public class Tipo {
   private Long id;
 
   @Column(unique = true, nullable = false, length = 50)
-  @NotBlank(message = "El nombre del tipo no puede estar vacío")
-  @Size(max = 50)
+  @NotBlank(message = "VALIDATION_TYPE_NAME_REQUIRED")
+  @Size(max = 50, message = "VALIDATION_TYPE_NAME_MAX_50")
   private String nombre;
 
   public Tipo() {}

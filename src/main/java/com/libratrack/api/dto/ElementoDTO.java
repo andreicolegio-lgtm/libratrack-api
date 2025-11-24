@@ -7,22 +7,22 @@ import java.util.Set;
 
 public class ElementoDTO {
 
-  @NotBlank(message = "El título no puede estar vacío")
+  @NotBlank(message = "VALIDATION_TITLE_REQUIRED")
   private String titulo;
 
-  @NotBlank(message = "La descripción no puede estar vacía")
+  @NotBlank(message = "VALIDATION_DESC_REQUIRED")
   private String descripcion;
 
   private String urlImagen;
   private LocalDate fechaLanzamiento;
 
-  @NotNull(message = "El ID del Tipo no puede ser nulo")
+  @NotNull(message = "VALIDATION_TYPE_ID_REQUIRED")
   private Long tipoId;
 
-  @NotNull(message = "El ID del Creador no puede ser nulo")
+  @NotNull(message = "VALIDATION_CREATOR_ID_REQUIRED")
   private Long creadorId;
 
-  @NotNull(message = "La lista de IDs de Géneros no puede ser nula")
+  @NotNull(message = "VALIDATION_GENRE_IDS_REQUIRED")
   private Set<Long> generoIds;
 
   public String getTitulo() {

@@ -33,7 +33,7 @@ public class PropuestaElementoService {
     Usuario proponente =
         usuarioRepo
             .findById(proponenteId)
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario proponente no encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
 
     PropuestaElemento nuevaPropuesta = new PropuestaElemento();
     nuevaPropuesta.setProponente(proponente);
@@ -65,14 +65,11 @@ public class PropuestaElementoService {
     Usuario revisor =
         usuarioRepo
             .findById(revisorId)
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario revisor no encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("REVIEWER_NOT_FOUND"));
     PropuestaElemento propuesta =
         propuestaRepo
             .findById(propuestaId)
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException(
-                        "Propuesta no encontrada con id: " + propuestaId));
+            .orElseThrow(() -> new ResourceNotFoundException("PROPOSAL_NOT_FOUND"));
     if (propuesta.getEstadoPropuesta() != EstadoPropuesta.PENDIENTE) {
       throw new ConflictException("PROPOSAL_ALREADY_HANDLED");
     }

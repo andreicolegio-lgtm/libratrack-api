@@ -1,5 +1,6 @@
 package com.libratrack.api.entity;
 
+import java.util.Set;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,6 +17,14 @@ public class Tipo {
   @NotBlank(message = "VALIDATION_TYPE_NAME_REQUIRED")
   @Size(max = 50, message = "VALIDATION_TYPE_NAME_MAX_50")
   private String nombre;
+
+  @ManyToMany
+  @JoinTable(
+      name = "tipo_genero",
+      joinColumns = @JoinColumn(name = "tipo_id"),
+      inverseJoinColumns = @JoinColumn(name = "genero_id")
+  )
+  private Set<Genero> generosPermitidos;
 
   public Tipo() {}
 
@@ -37,5 +46,13 @@ public class Tipo {
 
   public void setNombre(String nombre) {
     this.nombre = nombre;
+  }
+
+  public Set<Genero> getGenerosPermitidos() {
+    return generosPermitidos;
+  }
+
+  public void setGenerosPermitidos(Set<Genero> generosPermitidos) {
+    this.generosPermitidos = generosPermitidos;
   }
 }

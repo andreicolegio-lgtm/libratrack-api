@@ -27,6 +27,7 @@ public class PropuestaElementoService {
   @Autowired private ElementoRepository elementoRepo;
   @Autowired private TipoRepository tipoRepository;
   @Autowired private GeneroRepository generoRepository;
+  @Autowired private DataSqlSyncService dataSqlSyncService;
 
   @Transactional
   public PropuestaResponseDTO createPropuesta(PropuestaRequestDTO dto, Long proponenteId) {
@@ -58,6 +59,61 @@ public class PropuestaElementoService {
     return propuestas.stream().map(PropuestaResponseDTO::new).collect(Collectors.toList());
   }
 
+  private void updatePropuestaFields(PropuestaElemento propuesta, PropuestaUpdateDTO dto) {
+    propuesta.setTituloSugerido(dto.getTituloSugerido());
+    propuesta.setDescripcionSugerida(dto.getDescripcionSugerida());
+    propuesta.setTipoSugerido(dto.getTipoSugerido());
+    propuesta.setGenerosSugeridos(dto.getGenerosSugeridos());
+    propuesta.setUrlImagen(dto.getUrlImagen());
+
+    propuesta.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
+    propuesta.setTotalUnidades(dto.getTotalUnidades());
+    propuesta.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
+    propuesta.setTotalPaginasLibro(dto.getTotalPaginasLibro());
+  }
+
+  public Tipo traducirTipo(String tipoSugerido) {
+    if (tipoSugerido == null || tipoSugerido.isBlank()) {
+      throw new ConflictException("TYPE_EMPTY");
+    }
+    return tipoRepository
+        .findByNombre(tipoSugerido)
+        .orElseGet(() -> tipoRepository.save(new Tipo(tipoSugerido)));
+  }
+
+  public Set<Genero> traducirGeneros(String generosSugeridosString, Tipo tipo) {
+    if (generosSugeridosString == null || generosSugeridosString.isBlank()) {
+      throw new ConflictException("GENRES_EMPTY");
+    }
+    Set<Genero> generosFinales = new HashSet<>();
+    String[] generosSugeridosArray = generosSugeridosString.split("\\s*,\\s*");
+    for (String nombreGenero : generosSugeridosArray) {
+      if (nombreGenero.isBlank()) continue;
+      Genero genero =
+          generoRepository
+              .findByNombre(nombreGenero)
+              .orElseGet(() -> {
+                Genero nuevoGenero = new Genero(nombreGenero);
+                generoRepository.save(nuevoGenero);
+                tipo.getGenerosPermitidos().add(nuevoGenero);
+                tipoRepository.save(tipo);
+                dataSqlSyncService.appendGenreLink(tipo.getNombre(), nuevoGenero.getNombre());
+                return nuevoGenero;
+              });
+
+      if (!tipo.getGenerosPermitidos().contains(genero)) {
+        tipo.getGenerosPermitidos().add(genero);
+        tipoRepository.save(tipo);
+        dataSqlSyncService.appendGenreLink(tipo.getNombre(), genero.getNombre());
+      }
+      generosFinales.add(genero);
+    }
+    if (generosFinales.isEmpty()) {
+      throw new ConflictException("GENRE_INVALID");
+    }
+    return generosFinales;
+  }
+
   @Transactional
   public ElementoResponseDTO aprobarPropuesta(
       Long propuestaId, Long revisorId, PropuestaUpdateDTO dto) {
@@ -77,7 +133,7 @@ public class PropuestaElementoService {
     updatePropuestaFields(propuesta, dto);
 
     Tipo tipoFinal = traducirTipo(propuesta.getTipoSugerido());
-    Set<Genero> generosFinales = traducirGeneros(propuesta.getGenerosSugeridos());
+    Set<Genero> generosFinales = traducirGeneros(propuesta.getGenerosSugeridos(), tipoFinal);
 
     Elemento nuevoElemento = new Elemento();
     nuevoElemento.setTitulo(propuesta.getTituloSugerido());
@@ -101,47 +157,5 @@ public class PropuestaElementoService {
     Elemento elementoGuardado = elementoRepo.save(nuevoElemento);
 
     return new ElementoResponseDTO(elementoGuardado);
-  }
-
-  private void updatePropuestaFields(PropuestaElemento propuesta, PropuestaUpdateDTO dto) {
-    propuesta.setTituloSugerido(dto.getTituloSugerido());
-    propuesta.setDescripcionSugerida(dto.getDescripcionSugerida());
-    propuesta.setTipoSugerido(dto.getTipoSugerido());
-    propuesta.setGenerosSugeridos(dto.getGenerosSugeridos());
-    propuesta.setUrlImagen(dto.getUrlImagen());
-
-    propuesta.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
-    propuesta.setTotalUnidades(dto.getTotalUnidades());
-    propuesta.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
-    propuesta.setTotalPaginasLibro(dto.getTotalPaginasLibro());
-  }
-
-  public Tipo traducirTipo(String tipoSugerido) {
-    if (tipoSugerido == null || tipoSugerido.isBlank()) {
-      throw new ConflictException("TYPE_EMPTY");
-    }
-    return tipoRepository
-        .findByNombre(tipoSugerido)
-        .orElseGet(() -> tipoRepository.save(new Tipo(tipoSugerido)));
-  }
-
-  public Set<Genero> traducirGeneros(String generosSugeridosString) {
-    if (generosSugeridosString == null || generosSugeridosString.isBlank()) {
-      throw new ConflictException("GENRES_EMPTY");
-    }
-    Set<Genero> generosFinales = new HashSet<>();
-    String[] generosSugeridosArray = generosSugeridosString.split("\\s*,\\s*");
-    for (String nombreGenero : generosSugeridosArray) {
-      if (nombreGenero.isBlank()) continue;
-      Genero genero =
-          generoRepository
-              .findByNombre(nombreGenero)
-              .orElseGet(() -> generoRepository.save(new Genero(nombreGenero)));
-      generosFinales.add(genero);
-    }
-    if (generosFinales.isEmpty()) {
-      throw new ConflictException("GENRE_INVALID");
-    }
-    return generosFinales;
   }
 }

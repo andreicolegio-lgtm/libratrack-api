@@ -12,7 +12,6 @@ import com.libratrack.api.model.EstadoContenido;
 import com.libratrack.api.model.EstadoPublicacion;
 import com.libratrack.api.repository.ElementoRepository;
 import com.libratrack.api.repository.UsuarioRepository;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -76,7 +75,19 @@ public class ElementoService {
 
     Elemento nuevoElemento = new Elemento();
 
-    mapElementoFromFormDTO(nuevoElemento, dto);
+    Tipo tipo = propuestaService.traducirTipo(dto.getTipoNombre());
+    Set<Genero> generos = propuestaService.traducirGeneros(dto.getGenerosNombres(), tipo);
+
+    nuevoElemento.setTitulo(dto.getTitulo());
+    nuevoElemento.setDescripcion(dto.getDescripcion());
+    nuevoElemento.setUrlImagen(dto.getUrlImagen());
+    nuevoElemento.setTipo(tipo);
+    nuevoElemento.setGeneros(generos);
+
+    nuevoElemento.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
+    nuevoElemento.setTotalUnidades(dto.getTotalUnidades());
+    nuevoElemento.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
+    nuevoElemento.setTotalPaginasLibro(dto.getTotalPaginasLibro());
 
     nuevoElemento.setCreador(admin);
     nuevoElemento.setEstadoContenido(EstadoContenido.OFICIAL);
@@ -94,7 +105,19 @@ public class ElementoService {
             .findById(elementoId)
             .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
 
-    mapElementoFromFormDTO(elemento, dto);
+    Tipo tipo = propuestaService.traducirTipo(dto.getTipoNombre());
+    Set<Genero> generos = propuestaService.traducirGeneros(dto.getGenerosNombres(), tipo);
+
+    elemento.setTitulo(dto.getTitulo());
+    elemento.setDescripcion(dto.getDescripcion());
+    elemento.setUrlImagen(dto.getUrlImagen());
+    elemento.setTipo(tipo);
+    elemento.setGeneros(generos);
+
+    elemento.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
+    elemento.setTotalUnidades(dto.getTotalUnidades());
+    elemento.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
+    elemento.setTotalPaginasLibro(dto.getTotalPaginasLibro());
 
     Elemento elementoGuardado = elementoRepository.save(elemento);
 
@@ -124,28 +147,5 @@ public class ElementoService {
     Elemento elementoGuardado = elementoRepository.save(elemento);
     return findElementoById(elementoGuardado.getId())
         .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
-  }
-
-  private void mapElementoFromFormDTO(Elemento elemento, ElementoFormDTO dto) {
-    Tipo tipo = propuestaService.traducirTipo(dto.getTipoNombre());
-    Set<Genero> generos = propuestaService.traducirGeneros(dto.getGenerosNombres());
-
-    elemento.setTitulo(dto.getTitulo());
-    elemento.setDescripcion(dto.getDescripcion());
-    elemento.setUrlImagen(dto.getUrlImagen());
-    elemento.setTipo(tipo);
-    elemento.setGeneros(generos);
-
-    elemento.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
-    elemento.setTotalUnidades(dto.getTotalUnidades());
-    elemento.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
-    elemento.setTotalPaginasLibro(dto.getTotalPaginasLibro());
-
-    elemento.getSecuelas().clear();
-
-    if (dto.getSecuelaIds() != null && !dto.getSecuelaIds().isEmpty()) {
-      List<Elemento> secuelas = elementoRepository.findAllById(dto.getSecuelaIds());
-      elemento.setSecuelas(new HashSet<>(secuelas));
-    }
   }
 }

@@ -25,6 +25,8 @@ public class ElementoDTO {
   @NotNull(message = "VALIDATION_GENRE_IDS_REQUIRED")
   private Set<Long> generoIds;
 
+  private String duracion;
+
   public String getTitulo() {
     return titulo;
   }
@@ -79,5 +81,13 @@ public class ElementoDTO {
 
   public void setGeneroIds(Set<Long> generoIds) {
     this.generoIds = generoIds;
+  }
+
+  public String getDuracion() {
+    return duracion;
+  }
+
+  public void setDuracion(String duracion) {
+    this.duracion = duracion;
   }
 }

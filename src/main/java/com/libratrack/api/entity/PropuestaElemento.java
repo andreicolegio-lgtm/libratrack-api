@@ -57,6 +57,8 @@ public class PropuestaElemento {
   @Column(nullable = false, updatable = false)
   private LocalDateTime fechaPropuesta;
 
+  private String duracion;
+
   @PrePersist
   protected void onCrear() {
     this.fechaPropuesta = LocalDateTime.now();
@@ -182,5 +184,13 @@ public class PropuestaElemento {
 
   public void setTotalPaginasLibro(Integer totalPaginasLibro) {
     this.totalPaginasLibro = totalPaginasLibro;
+  }
+
+  public String getDuracion() {
+    return duracion;
+  }
+
+  public void setDuracion(String duracion) {
+    this.duracion = duracion;
   }
 }

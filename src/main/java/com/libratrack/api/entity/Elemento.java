@@ -66,6 +66,8 @@ public class Elemento {
   @ManyToMany(mappedBy = "secuelas", fetch = FetchType.LAZY)
   private Set<Elemento> precuelas = new HashSet<>();
 
+  private String duracion;
+
   public Elemento() {}
 
   public Long getId() {
@@ -194,5 +196,13 @@ public class Elemento {
 
   public void setPrecuelas(Set<Elemento> precuelas) {
     this.precuelas = precuelas;
+  }
+
+  public String getDuracion() {
+    return duracion;
+  }
+
+  public void setDuracion(String duracion) {
+    this.duracion = duracion;
   }
 }

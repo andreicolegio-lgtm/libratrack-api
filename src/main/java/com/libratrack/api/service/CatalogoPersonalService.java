@@ -98,4 +98,15 @@ public class CatalogoPersonalService {
 
     catalogoRepo.delete(entrada);
   }
+
+  @Transactional
+  public void toggleFavorito(Long userId, Long elementoId) {
+    CatalogoPersonal entrada =
+        catalogoRepo
+            .findByUsuarioIdAndElementoId(userId, elementoId)
+            .orElseThrow(() -> new ResourceNotFoundException("CATALOG_ENTRY_NOT_FOUND"));
+
+    entrada.setEsFavorito(!entrada.getEsFavorito());
+    catalogoRepo.save(entrada);
+  }
 }

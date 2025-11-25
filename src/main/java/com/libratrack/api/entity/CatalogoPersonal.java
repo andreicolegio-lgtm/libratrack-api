@@ -35,6 +35,8 @@ public class CatalogoPersonal {
 
   private Integer paginaActual;
 
+  private Boolean esFavorito = false;
+
   public CatalogoPersonal() {
     this.temporadaActual = 1;
     this.unidadActual = 0;
@@ -131,5 +133,13 @@ public class CatalogoPersonal {
 
   public void setPaginaActual(Integer paginaActual) {
     this.paginaActual = paginaActual;
+  }
+
+  public Boolean getEsFavorito() {
+    return esFavorito;
+  }
+
+  public void setEsFavorito(Boolean esFavorito) {
+    this.esFavorito = esFavorito;
   }
 }

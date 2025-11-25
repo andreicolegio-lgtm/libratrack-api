@@ -38,6 +38,9 @@ public class ElementoFormDTO {
 
   private List<Long> secuelaIds;
 
+  @Size(max = 255)
+  private String duracion;
+
   public String getTitulo() {
     return titulo;
   }
@@ -116,5 +119,13 @@ public class ElementoFormDTO {
 
   public void setSecuelaIds(List<Long> secuelaIds) {
     this.secuelaIds = secuelaIds;
+  }
+
+  public String getDuracion() {
+    return duracion;
+  }
+
+  public void setDuracion(String duracion) {
+    this.duracion = duracion;
   }
 }

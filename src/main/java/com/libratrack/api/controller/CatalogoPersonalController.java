@@ -51,4 +51,11 @@ public class CatalogoPersonalController {
     catalogoService.removeElementoDelCatalogo(currentUser.getId(), elementoId);
     return ResponseEntity.noContent().build();
   }
+
+  @PutMapping("/favorito/{id}")
+  public ResponseEntity<Void> toggleFavorito(
+      @PathVariable Long id, @AuthenticationPrincipal CustomUserDetails currentUser) {
+    catalogoService.toggleFavorito(currentUser.getId(), id);
+    return ResponseEntity.noContent().build();
+  }
 }

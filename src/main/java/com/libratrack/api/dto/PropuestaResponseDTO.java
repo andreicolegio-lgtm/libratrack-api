@@ -22,6 +22,7 @@ public class PropuestaResponseDTO {
 
   private String proponenteUsername;
   private String revisorUsername;
+  private String duracion;
 
   public PropuestaResponseDTO(PropuestaElemento p) {
     this.id = p.getId();
@@ -44,6 +45,7 @@ public class PropuestaResponseDTO {
     } else {
       this.revisorUsername = null;
     }
+    this.duracion = p.getDuracion();
   }
 
   public Long getId() {
@@ -100,5 +102,13 @@ public class PropuestaResponseDTO {
 
   public Integer getTotalPaginasLibro() {
     return totalPaginasLibro;
+  }
+
+  public String getDuracion() {
+    return duracion;
+  }
+
+  public void setDuracion(String duracion) {
+    this.duracion = duracion;
   }
 }

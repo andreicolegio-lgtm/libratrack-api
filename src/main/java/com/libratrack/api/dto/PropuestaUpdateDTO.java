@@ -35,6 +35,8 @@ public class PropuestaUpdateDTO {
   @Min(value = 1, message = "VALIDATION_PAGES_MIN_1")
   private Integer totalPaginasLibro;
 
+  private String duracion;
+
   public String getTituloSugerido() {
     return tituloSugerido;
   }
@@ -105,5 +107,13 @@ public class PropuestaUpdateDTO {
 
   public void setTotalPaginasLibro(Integer totalPaginasLibro) {
     this.totalPaginasLibro = totalPaginasLibro;
+  }
+
+  public String getDuracion() {
+    return duracion;
+  }
+
+  public void setDuracion(String duracion) {
+    this.duracion = duracion;
   }
 }

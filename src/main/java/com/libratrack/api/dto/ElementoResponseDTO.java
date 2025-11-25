@@ -30,6 +30,7 @@ public class ElementoResponseDTO {
 
   private Set<ElementoRelacionDTO> precuelas;
   private Set<ElementoRelacionDTO> secuelas;
+  private String duracion;
 
   public ElementoResponseDTO(Elemento elemento) {
 
@@ -44,6 +45,7 @@ public class ElementoResponseDTO {
     this.totalUnidades = elemento.getTotalUnidades();
     this.totalCapitulosLibro = elemento.getTotalCapitulosLibro();
     this.totalPaginasLibro = elemento.getTotalPaginasLibro();
+    this.duracion = elemento.getDuracion();
 
     if (Hibernate.isInitialized(elemento.getTipo()) && elemento.getTipo() != null) {
       this.tipoNombre = elemento.getTipo().getNombre();
@@ -143,5 +145,13 @@ public class ElementoResponseDTO {
 
   public Set<ElementoRelacionDTO> getSecuelas() {
     return secuelas;
+  }
+
+  public String getDuracion() {
+    return duracion;
+  }
+
+  public void setDuracion(String duracion) {
+    this.duracion = duracion;
   }
 }

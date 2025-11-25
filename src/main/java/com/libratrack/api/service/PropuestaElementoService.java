@@ -47,6 +47,7 @@ public class PropuestaElementoService {
     nuevaPropuesta.setTotalUnidades(dto.getTotalUnidades());
     nuevaPropuesta.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
     nuevaPropuesta.setTotalPaginasLibro(dto.getTotalPaginasLibro());
+    nuevaPropuesta.setDuracion(dto.getDuracion());
 
     PropuestaElemento propuestaGuardada = propuestaRepo.save(nuevaPropuesta);
 
@@ -60,6 +61,7 @@ public class PropuestaElementoService {
   }
 
   private void updatePropuestaFields(PropuestaElemento propuesta, PropuestaUpdateDTO dto) {
+    propuesta.setDuracion(dto.getDuracion());
     propuesta.setTituloSugerido(dto.getTituloSugerido());
     propuesta.setDescripcionSugerida(dto.getDescripcionSugerida());
     propuesta.setTipoSugerido(dto.getTipoSugerido());

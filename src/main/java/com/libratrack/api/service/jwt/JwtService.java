@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+/** Servicio utilitario para la generación, firma y validación de tokens JWT (JSON Web Tokens). */
 @Service
 public class JwtService {
 
@@ -23,6 +24,11 @@ public class JwtService {
   @Value("${libratrack.app.jwtAccessExpirationMs}")
   private Long jwtAccessExpirationMs;
 
+  /**
+   * Genera un nuevo token de acceso para un usuario autenticado.
+   *
+   * @param userId ID del usuario que será el 'subject' del token.
+   */
   public String generateToken(Long userId) {
     Map<String, Object> claims = new HashMap<>();
     return createToken(claims, userId.toString());
@@ -43,29 +49,29 @@ public class JwtService {
     return Keys.hmacShaKeyFor(keyBytes);
   }
 
+  /** Extrae el ID de usuario (subject) del token. */
   public Long extractUserId(String token) {
     String sub = extractClaim(token, Claims::getSubject);
     return Long.parseLong(sub);
   }
 
+  /** Valida que el token sea auténtico, no haya expirado y pertenezca al usuario proporcionado. */
   public Boolean validateToken(String token, UserDetails userDetails) {
     final Long userId = extractUserId(token);
 
-    // Validación robusta: Compara el ID del token con el ID del UserDetails personalizado
     if (userDetails instanceof CustomUserDetails) {
       return userId.equals(((CustomUserDetails) userDetails).getId()) && !isTokenExpired(token);
     }
 
-    // Fallback por si acaso se usa UserDetails estándar (no debería ocurrir con la nueva
-    // estructura)
-    return userId.toString().equals(userDetails.getUsername()) && !isTokenExpired(token);
+    // Fallback de seguridad (no debería ocurrir en producción normal)
+    return false;
   }
 
   private Boolean isTokenExpired(String token) {
     return extractExpiration(token).before(new Date());
   }
 
-  public Date extractExpiration(String token) {
+  private Date extractExpiration(String token) {
     return extractClaim(token, Claims::getExpiration);
   }
 

@@ -10,17 +10,30 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controlador público (para usuarios registrados) para explorar el contenido de la plataforma.
+ * Permite buscar, filtrar y ver detalles de los elementos.
+ */
 @RestController
 @RequestMapping("/api/elementos")
 public class ElementoController {
 
   @Autowired private ElementoService elementoService;
 
+  /**
+   * Busca elementos con paginación y filtros dinámicos.
+   *
+   * @param searchText Texto para buscar en el título (opcional).
+   * @param types Lista de tipos a incluir (ej. "Anime", "Manga") (opcional).
+   * @param genres Lista de géneros a incluir (opcional).
+   * @param page Número de página (0-indexado).
+   * @param size Tamaño de la página.
+   * @return Página de resultados DTO.
+   */
   @PreAuthorize("hasAuthority('ROLE_USER')")
   @GetMapping
   public ResponseEntity<Page<ElementoResponseDTO>> getAllElementos(
@@ -36,19 +49,18 @@ public class ElementoController {
     return ResponseEntity.ok(pagina);
   }
 
+  /** Obtiene los detalles completos de un elemento específico por su ID. */
   @PreAuthorize("hasAuthority('ROLE_USER')")
   @GetMapping("/{id}")
   public ResponseEntity<ElementoResponseDTO> getElementoById(@PathVariable Long id) {
-
-    Optional<ElementoResponseDTO> elementoDTOOptional = elementoService.findElementoById(id);
-
-    if (elementoDTOOptional.isPresent()) {
-      return ResponseEntity.ok(elementoDTOOptional.get());
-    } else {
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    }
+    Optional<ElementoResponseDTO> elementoDTO = elementoService.findElementoById(id);
+    return elementoDTO.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
   }
 
+  /**
+   * Endpoint ligero para obtener una lista simple de todos los elementos (ID, Título, Imagen). Útil
+   * para paneles de administración o selectores de relaciones. Restringido a personal autorizado.
+   */
   @PreAuthorize("hasAnyAuthority('ROLE_MODERADOR', 'ROLE_ADMIN')")
   @GetMapping("/all-simple")
   public ResponseEntity<List<ElementoRelacionDTO>> getAllElementosSimple() {

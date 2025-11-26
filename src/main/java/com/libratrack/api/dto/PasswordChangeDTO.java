@@ -3,15 +3,17 @@ package com.libratrack.api.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/** DTO para la solicitud de cambio de contraseña del usuario. */
 public class PasswordChangeDTO {
 
-  @NotBlank(message = "VALIDATION_PASSWORD_CURRENT_REQUIRED")
+  @NotBlank(message = "{validation.password.current.required}")
   private String contraseñaActual;
 
-  @NotBlank(message = "VALIDATION_PASSWORD_NEW_REQUIRED")
-  @Size(min = 8, message = "VALIDATION_PASSWORD_MIN_8")
+  @NotBlank(message = "{validation.password.new.required}")
+  @Size(min = 8, message = "{validation.password.min_length}")
   private String nuevaContraseña;
 
+  // Getters y Setters
   public String getContraseñaActual() {
     return contraseñaActual;
   }

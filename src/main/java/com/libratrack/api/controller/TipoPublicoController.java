@@ -12,21 +12,23 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controlador de acceso público (para usuarios logueados) a la lista de Tipos. Utilizado para
+ * llenar selectores y filtros en la interfaz de usuario.
+ */
 @RestController
 @RequestMapping("/api/tipos")
 public class TipoPublicoController {
 
   @Autowired private TipoService tipoService;
 
+  /** Obtiene todos los tipos disponibles junto con sus géneros permitidos. */
   @GetMapping
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<List<TipoResponseDTO>> getAllTiposPublico() {
-
     List<Tipo> tipos = tipoService.getAllTipos();
-
     List<TipoResponseDTO> dtos =
         tipos.stream().map(TipoResponseDTO::new).collect(Collectors.toList());
-
     return ResponseEntity.ok(dtos);
   }
 }

@@ -11,14 +11,15 @@ import com.libratrack.api.exception.ResourceNotFoundException;
 import com.libratrack.api.repository.UsuarioRepository;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -26,191 +27,166 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * Servicio principal para la gestión de la lógica de negocio relacionada con usuarios. Maneja
+ * perfiles, registro, autenticación con Google, cambios de contraseña y administración.
+ */
 @Service
 public class UsuarioService {
 
   private static final Logger logger = LoggerFactory.getLogger(UsuarioService.class);
 
+  // Regex: Al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.
+  private static final String PASSWORD_REGEX =
+      "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+
+  @Autowired private UsuarioRepository usuarioRepository;
+  @Autowired private PasswordEncoder passwordEncoder;
+  @Autowired private MessageSource messageSource;
+
+  // =============================================================================================
+  // GESTIÓN DE PERFIL DE USUARIO (MI CUENTA)
+  // =============================================================================================
+
   @Transactional(readOnly = true)
   public UsuarioResponseDTO getMiPerfilById(Long userId) {
-    Usuario usuario =
-        usuarioRepository
-            .findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+    Usuario usuario = findUserByIdOrThrow(userId);
     return new UsuarioResponseDTO(usuario);
   }
 
+  @Transactional
   public UsuarioResponseDTO updateMiPerfilById(Long userId, UsuarioUpdateDTO updateDto) {
-    Usuario usuarioActual =
-        usuarioRepository
-            .findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+    Usuario usuarioActual = findUserByIdOrThrow(userId);
     String nuevoUsername = updateDto.getUsername().trim();
-    if (usuarioActual.getUsername().equals(nuevoUsername)) {
-      return new UsuarioResponseDTO(usuarioActual);
+
+    // Si el username ha cambiado, verificar disponibilidad
+    if (!usuarioActual.getUsername().equals(nuevoUsername)) {
+      if (usuarioRepository.existsByUsername(nuevoUsername)) {
+        throw new ConflictException("{exception.user.username.exists}");
+      }
+      usuarioActual.setUsername(nuevoUsername);
     }
-    Optional<Usuario> usuarioExistente = usuarioRepository.findByUsername(nuevoUsername);
-    if (usuarioExistente.isPresent()) {
-      throw new ConflictException("USERNAME_ALREADY_EXISTS");
-    }
-    usuarioActual.setUsername(nuevoUsername);
+
     Usuario usuarioActualizado = usuarioRepository.save(usuarioActual);
     return new UsuarioResponseDTO(usuarioActualizado);
   }
 
-  private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
-
-  private void validatePassword(String password) {
-    System.out.println("Validating password: " + password);
-    if (!password.matches(PASSWORD_REGEX)) {
-      System.out.println("Validation failed: Password does not meet complexity requirements");
-      throw new IllegalArgumentException("VALIDATION_PASSWORD_COMPLEXITY");
-    }
-    System.out.println("Validation passed");
-  }
-
-  @Autowired private MessageSource messageSource;
-
-  public ResponseEntity<Map<String, String>> changePasswordById(Long userId, PasswordChangeDTO passwordDto) {
-    Usuario usuarioActual =
-        usuarioRepository
-            .findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
-
-    // Log current password validation
-    String currentPassword = passwordDto.getContraseñaActual();
-    logger.info("Validating current password for user ID: {}", userId);
-    if (!passwordEncoder.matches(currentPassword, usuarioActual.getPassword())) {
-      logger.warn("Current password validation failed for user ID: {}", userId);
-      throw new ConflictException("PASSWORD_INCORRECT");
-    }
-
-    // Log new password comparison
-    String newPassword = passwordDto.getNuevaContraseña();
-    logger.info("Comparing new password with current password for user ID: {}", userId);
-    if (passwordEncoder.matches(newPassword, usuarioActual.getPassword())) {
-      logger.warn("New password matches current password for user ID: {}", userId);
-      throw new ConflictException("PASSWORD_UNCHANGED");
-    }
-
-    // Validate new password complexity
-    logger.info("Validating new password complexity for user ID: {}", userId);
-    validatePassword(newPassword);
-
-    // Update password
-    logger.info("Updating password for user ID: {}", userId);
-    String hashedNewPassword = passwordEncoder.encode(newPassword);
-    usuarioActual.setPassword(hashedNewPassword);
-    usuarioRepository.save(usuarioActual);
-
-    Map<String, String> response = new HashMap<>();
-    response.put("message", messageSource.getMessage("password.updated", null, LocaleContextHolder.getLocale()));
-    logger.info("Password updated successfully for user ID: {}", userId);
-    return ResponseEntity.ok(response);
-  }
-
+  @Transactional
   public UsuarioResponseDTO updateFotoPerfilById(Long userId, String fotoUrl) {
-    Usuario usuario =
-        usuarioRepository
-            .findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+    Usuario usuario = findUserByIdOrThrow(userId);
     usuario.setFotoPerfilUrl(fotoUrl);
     Usuario usuarioActualizado = usuarioRepository.save(usuario);
     return new UsuarioResponseDTO(usuarioActualizado);
   }
 
-  @Autowired private UsuarioRepository usuarioRepository;
+  @Transactional
+  public ResponseEntity<Map<String, String>> changePasswordById(
+      Long userId, PasswordChangeDTO passwordDto) {
+    Usuario usuarioActual = findUserByIdOrThrow(userId);
 
-  @Autowired private PasswordEncoder passwordEncoder;
+    // 1. Validar contraseña actual
+    String currentPassword = passwordDto.getContraseñaActual();
+    if (!passwordEncoder.matches(currentPassword, usuarioActual.getPassword())) {
+      logger.warn("Intento fallido de cambio de contraseña para usuario ID: {}", userId);
+      throw new ConflictException("{exception.password.incorrect}");
+    }
+
+    // 2. Validar nueva contraseña (no debe ser igual a la anterior)
+    String newPassword = passwordDto.getNuevaContraseña();
+    if (passwordEncoder.matches(newPassword, usuarioActual.getPassword())) {
+      throw new ConflictException("{exception.password.unchanged}");
+    }
+
+    // 3. Validar complejidad
+    validatePasswordComplexity(newPassword);
+
+    // 4. Actualizar
+    usuarioActual.setPassword(passwordEncoder.encode(newPassword));
+    usuarioRepository.save(usuarioActual);
+
+    logger.info("Contraseña actualizada exitosamente para usuario ID: {}", userId);
+
+    String successMessage =
+        messageSource.getMessage("message.password.updated", null, LocaleContextHolder.getLocale());
+    return ResponseEntity.ok(Map.of("message", successMessage));
+  }
+
+  // =============================================================================================
+  // REGISTRO Y AUTENTICACIÓN
+  // =============================================================================================
 
   @Transactional
   public UsuarioResponseDTO registrarUsuario(Usuario nuevoUsuario) {
     if (usuarioRepository.existsByUsername(nuevoUsuario.getUsername())) {
-      throw new ConflictException("USERNAME_ALREADY_EXISTS");
+      throw new ConflictException("{exception.user.username.exists}");
     }
     if (usuarioRepository.existsByEmail(nuevoUsuario.getEmail())) {
-      throw new ConflictException("EMAIL_ALREADY_REGISTERED");
+      throw new ConflictException("{exception.user.email.exists}");
     }
-    String passCifrada = passwordEncoder.encode(nuevoUsuario.getPassword());
-    nuevoUsuario.setPassword(passCifrada);
+
+    // Encriptar contraseña y asignar roles por defecto
+    nuevoUsuario.setPassword(passwordEncoder.encode(nuevoUsuario.getPassword()));
     nuevoUsuario.setEsModerador(false);
     nuevoUsuario.setEsAdministrador(false);
+
     Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
+    logger.info("Nuevo usuario registrado: {}", usuarioGuardado.getUsername());
+
     return new UsuarioResponseDTO(usuarioGuardado);
   }
 
-  @Transactional(readOnly = true)
-  public UsuarioResponseDTO getMiPerfil(String username) {
-    Usuario usuario =
-        usuarioRepository
-            .findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
-    return new UsuarioResponseDTO(usuario);
+  @Transactional
+  public Usuario findOrCreateGoogleUser(Payload payload) {
+    String email = payload.getEmail();
+    Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+
+    if (usuarioOpt.isPresent()) {
+      // Usuario existente: actualizar foto si viene de Google
+      Usuario usuario = usuarioOpt.get();
+      if (payload.get("picture") != null) {
+        usuario.setFotoPerfilUrl((String) payload.get("picture"));
+        return usuarioRepository.save(usuario);
+      }
+      return usuario;
+    } else {
+      // Nuevo usuario vía Google
+      Usuario nuevoUsuario = new Usuario();
+      nuevoUsuario.setEmail(email);
+      nuevoUsuario.setUsername(generarUsernameUnicoDesdeGoogle(payload));
+
+      // Contraseña aleatoria (el usuario entra con Google, no la usa, pero es requerida por BD)
+      nuevoUsuario.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+
+      if (payload.get("picture") != null) {
+        nuevoUsuario.setFotoPerfilUrl((String) payload.get("picture"));
+      }
+
+      nuevoUsuario.setEsModerador(false);
+      nuevoUsuario.setEsAdministrador(false);
+
+      logger.info("Nuevo usuario creado vía Google: {}", email);
+      return usuarioRepository.save(nuevoUsuario);
+    }
   }
 
-  @Transactional
-  public UsuarioResponseDTO updateMiPerfil(String usernameActual, UsuarioUpdateDTO updateDto) {
-    Usuario usuarioActual =
-        usuarioRepository
-            .findByUsername(usernameActual)
-            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
-    String nuevoUsername = updateDto.getUsername().trim();
-    if (usuarioActual.getUsername().equals(nuevoUsername)) {
-      return new UsuarioResponseDTO(usuarioActual);
-    }
-    Optional<Usuario> usuarioExistente = usuarioRepository.findByUsername(nuevoUsername);
-    if (usuarioExistente.isPresent()) {
-      throw new ConflictException("USERNAME_ALREADY_EXISTS");
-    }
-    usuarioActual.setUsername(nuevoUsername);
-    Usuario usuarioActualizado = usuarioRepository.save(usuarioActual);
-    return new UsuarioResponseDTO(usuarioActualizado);
-  }
-
-  @Transactional
-  public void changePassword(String usernameActual, PasswordChangeDTO passwordDto) {
-    Usuario usuarioActual =
-        usuarioRepository
-            .findByUsername(usernameActual)
-            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
-    String contraseñaActualPlana = passwordDto.getContraseñaActual();
-    String contraseñaActualHasheada = usuarioActual.getPassword();
-    if (!passwordEncoder.matches(contraseñaActualPlana, contraseñaActualHasheada)) {
-      throw new ConflictException("PASSWORD_INCORRECT");
-    }
-    String nuevaContraseñaPlana = passwordDto.getNuevaContraseña();
-    String nuevaContraseñaHasheada = passwordEncoder.encode(nuevaContraseñaPlana);
-    usuarioActual.setPassword(nuevaContraseñaHasheada);
-    usuarioRepository.save(usuarioActual);
-  }
-
-  @Transactional
-  public UsuarioResponseDTO updateFotoPerfil(String username, String fotoUrl) {
-    Usuario usuario =
-        usuarioRepository
-            .findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
-    usuario.setFotoPerfilUrl(fotoUrl);
-    Usuario usuarioActualizado = usuarioRepository.save(usuario);
-    return new UsuarioResponseDTO(usuarioActualizado);
-  }
+  // =============================================================================================
+  // ADMINISTRACIÓN
+  // =============================================================================================
 
   @Transactional(readOnly = true)
   public Page<UsuarioResponseDTO> getAllUsuarios(
       Pageable pageable, String search, String roleFilter) {
-
     Specification<Usuario> spec =
         (root, query, cb) -> {
           List<Predicate> predicates = new ArrayList<>();
 
           if (search != null && !search.isBlank()) {
             String likePattern = "%" + search.toLowerCase() + "%";
-            Predicate searchUsername = cb.like(cb.lower(root.get("username")), likePattern);
-            Predicate searchEmail = cb.like(cb.lower(root.get("email")), likePattern);
-            predicates.add(cb.or(searchUsername, searchEmail));
+            predicates.add(
+                cb.or(
+                    cb.like(cb.lower(root.get("username")), likePattern),
+                    cb.like(cb.lower(root.get("email")), likePattern)));
           }
 
           if (roleFilter != null && !roleFilter.isBlank()) {
@@ -224,70 +200,60 @@ public class UsuarioService {
           return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-    Page<Usuario> usuarios = usuarioRepository.findAll(spec, pageable);
-
-    return usuarios.map(UsuarioResponseDTO::new);
+    return usuarioRepository.findAll(spec, pageable).map(UsuarioResponseDTO::new);
   }
 
   @Transactional
   public UsuarioResponseDTO updateUserRoles(Long usuarioId, RolUpdateDTO dto) {
-    Usuario usuario =
-        usuarioRepository
-            .findById(usuarioId)
-            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+    Usuario usuario = findUserByIdOrThrow(usuarioId);
     usuario.setEsModerador(dto.getEsModerador());
     usuario.setEsAdministrador(dto.getEsAdministrador());
-    Usuario usuarioActualizado = usuarioRepository.save(usuario);
-    return new UsuarioResponseDTO(usuarioActualizado);
+
+    Usuario usuarioGuardado = usuarioRepository.save(usuario);
+    logger.info(
+        "Roles actualizados para usuario ID {}: Admin={}, Mod={}",
+        usuarioId,
+        usuarioGuardado.getEsAdministrador(),
+        usuarioGuardado.getEsModerador());
+
+    return new UsuarioResponseDTO(usuarioGuardado);
   }
 
-  @Transactional
-  public Usuario findOrCreateGoogleUser(Payload payload) {
-    String email = payload.getEmail();
-    Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+  // =============================================================================================
+  // MÉTODOS AUXILIARES PRIVADOS
+  // =============================================================================================
 
-    if (usuarioOpt.isPresent()) {
-      Usuario usuario = usuarioOpt.get();
+  private Usuario findUserByIdOrThrow(Long userId) {
+    return usuarioRepository
+        .findById(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("{exception.user.not_found}"));
+  }
 
-      if (payload.get("picture") != null) {
-        usuario.setFotoPerfilUrl((String) payload.get("picture"));
-      }
-      return usuarioRepository.save(usuario);
-
-    } else {
-      Usuario nuevoUsuario = new Usuario();
-      nuevoUsuario.setEmail(email);
-
-      String username = (String) payload.get("given_name");
-      if (username == null || username.isBlank()) {
-        username = email.split("@")[0];
-      }
-      if (username.length() > 40) {
-        username = username.substring(0, 40);
-      }
-      nuevoUsuario.setUsername(generarUsernameUnico(username));
-
-      String randomPassword = UUID.randomUUID().toString();
-      nuevoUsuario.setPassword(passwordEncoder.encode(randomPassword));
-
-      if (payload.get("picture") != null) {
-        nuevoUsuario.setFotoPerfilUrl((String) payload.get("picture"));
-      }
-
-      nuevoUsuario.setEsModerador(false);
-      nuevoUsuario.setEsAdministrador(false);
-
-      return usuarioRepository.save(nuevoUsuario);
+  private void validatePasswordComplexity(String password) {
+    if (!password.matches(PASSWORD_REGEX)) {
+      throw new IllegalArgumentException("{validation.password.complexity}");
     }
   }
 
-  private String generarUsernameUnico(String baseUsername) {
+  private String generarUsernameUnicoDesdeGoogle(Payload payload) {
+    String baseUsername = (String) payload.get("given_name");
+    if (baseUsername == null || baseUsername.isBlank()) {
+      baseUsername = payload.getEmail().split("@")[0];
+    }
+    // Limpieza básica
+    baseUsername = baseUsername.replaceAll("[^a-zA-Z0-9]", "");
+
+    if (baseUsername.length() > 40) {
+      baseUsername = baseUsername.substring(0, 40);
+    }
+
     String username = baseUsername;
     int i = 1;
     while (usuarioRepository.existsByUsername(username)) {
       String suffix = String.valueOf(i);
-      if (baseUsername.length() + suffix.length() > 50) {
-        username = baseUsername.substring(0, 50 - suffix.length()) + suffix;
+      int maxBaseLen = 50 - suffix.length();
+      if (baseUsername.length() > maxBaseLen) {
+        username = baseUsername.substring(0, maxBaseLen) + suffix;
       } else {
         username = baseUsername + suffix;
       }

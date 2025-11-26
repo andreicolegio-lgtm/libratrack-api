@@ -5,20 +5,25 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 
+/**
+ * DTO utilizado en formularios administrativos para Crear o Editar un Elemento completo. Incluye
+ * validaciones de formato y campos para relaciones por nombre (Tipo, Géneros) para facilitar la
+ * entrada de datos desde el frontend.
+ */
 public class ElementoFormDTO {
 
-  @NotBlank(message = "VALIDATION_TITLE_REQUIRED")
-  @Size(max = 255)
+  @NotBlank(message = "{validation.elemento.titulo.required}")
+  @Size(max = 255, message = "{validation.elemento.titulo.size}")
   private String titulo;
 
-  @NotBlank(message = "VALIDATION_DESC_REQUIRED")
-  @Size(max = 5000)
+  @NotBlank(message = "{validation.elemento.descripcion.required}")
+  @Size(max = 5000, message = "{validation.elemento.descripcion.size}")
   private String descripcion;
 
-  @NotBlank(message = "VALIDATION_TYPE_REQUIRED")
+  @NotBlank(message = "{validation.elemento.tipo.required}")
   private String tipoNombre;
 
-  @NotBlank(message = "VALIDATION_GENRES_REQUIRED")
+  @NotBlank(message = "{validation.elemento.generos.required}")
   private String generosNombres;
 
   @Size(max = 255)
@@ -27,13 +32,13 @@ public class ElementoFormDTO {
   @Size(max = 255)
   private String episodiosPorTemporada;
 
-  @Min(value = 1)
+  @Min(value = 1, message = "{validation.elemento.unidades.min}")
   private Integer totalUnidades;
 
-  @Min(value = 1)
+  @Min(value = 1, message = "{validation.elemento.capitulos.min}")
   private Integer totalCapitulosLibro;
 
-  @Min(value = 1)
+  @Min(value = 1, message = "{validation.elemento.paginas.min}")
   private Integer totalPaginasLibro;
 
   private List<Long> secuelaIds;
@@ -41,6 +46,7 @@ public class ElementoFormDTO {
   @Size(max = 255)
   private String duracion;
 
+  // Getters y Setters
   public String getTitulo() {
     return titulo;
   }

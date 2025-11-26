@@ -1,5 +1,5 @@
 -- ==================================================================================
--- 1. INSERTAR TIPOS (Standard English Keys)
+-- 1. INSERTAR TIPOS (Claves Estándar en Inglés)
 -- ==================================================================================
 INSERT IGNORE INTO tipos (nombre) VALUES ('Anime');
 INSERT IGNORE INTO tipos (nombre) VALUES ('Movie');
@@ -10,7 +10,7 @@ INSERT IGNORE INTO tipos (nombre) VALUES ('Book');
 INSERT IGNORE INTO tipos (nombre) VALUES ('Series');
 
 -- ==================================================================================
--- 2. INSERTAR GÉNEROS (Standard English Keys)
+-- 2. INSERTAR GÉNEROS (Claves Estándar en Inglés)
 -- ==================================================================================
 -- General / Universal
 INSERT IGNORE INTO generos (nombre) VALUES ('Action'), ('Adventure'), ('Comedy'), ('Drama'), ('Fantasy'), ('Horror'), ('Mystery'), ('Romance'), ('Sci-Fi'), ('Slice of Life'), ('Psychological'), ('Thriller'), ('Historical'), ('Crime'), ('Family'), ('War'), ('Cyberpunk'), ('Post-Apocalyptic');
@@ -29,14 +29,12 @@ INSERT IGNORE INTO generos (nombre) VALUES ('Biography'), ('Essay'), ('Poetry'),
 -- ==================================================================================
 
 -- GRUPO A: Géneros Universales (Aplican a TODOS los tipos)
--- Action, Adventure, Comedy, Drama, Fantasy, Horror, Mystery, Romance, Sci-Fi, Psychological, Thriller, Historical, Crime, Family, War, Cyberpunk, Post-Apocalyptic
 INSERT IGNORE INTO tipo_genero (tipo_id, genero_id)
 SELECT t.id, g.id FROM tipos t, generos g
 WHERE t.nombre IN ('Anime', 'Movie', 'Video Game', 'Manga', 'Manhwa', 'Book', 'Series')
 AND g.nombre IN ('Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Psychological', 'Thriller', 'Historical', 'Crime', 'Family', 'War', 'Cyberpunk', 'Post-Apocalyptic');
 
 -- GRUPO B: Específico Asiático (Anime, Manga, Manhwa)
--- Incluye Slice of Life, Martial Arts, School y los demográficos japoneses
 INSERT IGNORE INTO tipo_genero (tipo_id, genero_id)
 SELECT t.id, g.id FROM tipos t, generos g
 WHERE t.nombre IN ('Anime', 'Manga', 'Manhwa')

@@ -3,6 +3,7 @@ package com.libratrack.api.dto;
 import com.libratrack.api.entity.Resena;
 import java.time.LocalDateTime;
 
+/** DTO para mostrar una reseña en el listado de comentarios de un elemento. */
 public class ResenaResponseDTO {
 
   private Long id;
@@ -20,12 +21,19 @@ public class ResenaResponseDTO {
     this.textoResena = resena.getTextoResena();
     this.fechaCreacion = resena.getFechaCreacion();
 
-    this.elementoId = resena.getElemento().getId();
-    this.usernameAutor = resena.getUsuario().getUsername();
+    if (resena.getElemento() != null) {
+      this.elementoId = resena.getElemento().getId();
+    }
 
-    this.autorFotoPerfilUrl = resena.getUsuario().getFotoPerfilUrl();
+    if (resena.getUsuario() != null) {
+      this.usernameAutor = resena.getUsuario().getUsername();
+      this.autorFotoPerfilUrl = resena.getUsuario().getFotoPerfilUrl();
+    } else {
+      this.usernameAutor = "Usuario Eliminado";
+    }
   }
 
+  // Getters
   public Long getId() {
     return id;
   }

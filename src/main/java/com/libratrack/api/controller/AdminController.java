@@ -19,15 +19,19 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controlador para operaciones administrativas. Acceso restringido exclusivamente a usuarios con
+ * rol ADMIN.
+ */
 @RestController
 @RequestMapping("/api/admin")
 @PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class AdminController {
 
   @Autowired private UsuarioService usuarioService;
-
   @Autowired private ElementoService elementoService;
 
+  /** Lista todos los usuarios registrados con paginación y filtros opcionales. */
   @GetMapping("/usuarios")
   public ResponseEntity<Page<UsuarioResponseDTO>> getAllUsuarios(
       @RequestParam(value = "page", defaultValue = "0") int page,
@@ -36,12 +40,12 @@ public class AdminController {
       @RequestParam(value = "role", required = false) String roleFilter) {
 
     Pageable pageable = PageRequest.of(page, size, Sort.by("username").ascending());
-
     Page<UsuarioResponseDTO> usuarios = usuarioService.getAllUsuarios(pageable, search, roleFilter);
 
     return ResponseEntity.ok(usuarios);
   }
 
+  /** Actualiza los roles (permisos) de un usuario específico. */
   @PutMapping("/usuarios/{id}/roles")
   public ResponseEntity<UsuarioResponseDTO> updateUserRoles(
       @PathVariable Long id, @Valid @RequestBody RolUpdateDTO dto) {
@@ -50,6 +54,7 @@ public class AdminController {
     return ResponseEntity.ok(usuarioActualizado);
   }
 
+  /** Crea un nuevo elemento de contenido directamente como OFICIAL. */
   @PostMapping("/elementos")
   public ResponseEntity<ElementoResponseDTO> crearElementoOficial(
       @Valid @RequestBody ElementoFormDTO dto,
@@ -60,6 +65,7 @@ public class AdminController {
     return new ResponseEntity<>(nuevoElemento, HttpStatus.CREATED);
   }
 
+  /** Edita un elemento existente. Accesible también para moderadores. */
   @PutMapping("/elementos/{id}")
   @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MODERADOR')")
   public ResponseEntity<ElementoResponseDTO> updateElemento(
@@ -69,16 +75,16 @@ public class AdminController {
     return ResponseEntity.ok(elementoActualizado);
   }
 
+  /** Cambia el estado de un elemento a OFICIAL. */
   @PutMapping("/elementos/{id}/oficializar")
   public ResponseEntity<ElementoResponseDTO> oficializarElemento(@PathVariable Long id) {
-
     ElementoResponseDTO elementoActualizado = elementoService.oficializarElemento(id);
     return ResponseEntity.ok(elementoActualizado);
   }
 
+  /** Cambia el estado de un elemento a COMUNITARIO. */
   @PutMapping("/elementos/{id}/comunitarizar")
   public ResponseEntity<ElementoResponseDTO> comunitarizarElemento(@PathVariable Long id) {
-
     ElementoResponseDTO elementoActualizado = elementoService.comunitarizarElemento(id);
     return ResponseEntity.ok(elementoActualizado);
   }

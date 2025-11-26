@@ -11,12 +11,12 @@ import com.libratrack.api.repository.ElementoRepository;
 import com.libratrack.api.repository.ResenaRepository;
 import com.libratrack.api.repository.UsuarioRepository;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Servicio para la gestión de reseñas y valoraciones de contenido. */
 @Service
 public class ResenaService {
 
@@ -24,43 +24,49 @@ public class ResenaService {
   @Autowired private UsuarioRepository usuarioRepo;
   @Autowired private ElementoRepository elementoRepo;
 
+  /** Obtiene todas las reseñas asociadas a un elemento, ordenadas por fecha. */
   @Transactional(readOnly = true)
   public List<ResenaResponseDTO> getResenasByElementoId(Long elementoId) {
     if (!elementoRepo.existsById(elementoId)) {
-      throw new ResourceNotFoundException("ELEMENT_NOT_FOUND");
+      throw new ResourceNotFoundException("{exception.elemento.not_found}");
     }
 
-    List<Resena> resenas = resenaRepo.findByElementoIdOrderByFechaCreacionDesc(elementoId);
-
-    return resenas.stream().map(ResenaResponseDTO::new).collect(Collectors.toList());
+    return resenaRepo.findByElementoIdOrderByFechaCreacionDesc(elementoId).stream()
+        .map(ResenaResponseDTO::new)
+        .collect(Collectors.toList());
   }
 
+  /**
+   * Crea una nueva reseña para un elemento. Valida que el usuario no haya reseñado previamente el
+   * mismo contenido.
+   */
   @Transactional
   public ResenaResponseDTO createResena(ResenaDTO dto, Long userId) {
-
+    // 1. Obtener entidades
     Usuario usuario =
         usuarioRepo
             .findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("INVALID_USER_TOKEN"));
+            .orElseThrow(() -> new ResourceNotFoundException("{exception.user.not_found}"));
 
     Elemento elemento =
         elementoRepo
             .findById(dto.getElementoId())
-            .orElseThrow(() -> new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
+            .orElseThrow(() -> new ResourceNotFoundException("{exception.elemento.not_found}"));
 
-    Optional<Resena> existingResena =
-        resenaRepo.findByUsuarioIdAndElementoId(usuario.getId(), elemento.getId());
-    if (existingResena.isPresent()) {
-      throw new ConflictException("ALREADY_REVIEWED");
+    // 2. Validar duplicados
+    if (resenaRepo.findByUsuarioIdAndElementoId(usuario.getId(), elemento.getId()).isPresent()) {
+      throw new ConflictException("{exception.resena.already_exists}");
     }
 
+    // 3. Validar rango de valoración
+    if (dto.getValoracion() == null || dto.getValoracion() < 1 || dto.getValoracion() > 5) {
+      throw new IllegalArgumentException("{validation.resena.valoracion.range}");
+    }
+
+    // 4. Crear y guardar
     Resena nuevaResena = new Resena();
     nuevaResena.setUsuario(usuario);
     nuevaResena.setElemento(elemento);
-
-    if (dto.getValoracion() == null || dto.getValoracion() < 1 || dto.getValoracion() > 5) {
-      throw new ConflictException("INVALID_RATING_RANGE");
-    }
     nuevaResena.setValoracion(dto.getValoracion());
     nuevaResena.setTextoResena(dto.getTextoResena());
 

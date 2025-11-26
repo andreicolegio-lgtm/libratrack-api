@@ -19,6 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Servicio para gestionar el ciclo de vida de las propuestas de contenido (Creación, Revisión,
+ * Aprobación).
+ */
 @Service
 public class PropuestaElementoService {
 
@@ -34,7 +38,7 @@ public class PropuestaElementoService {
     Usuario proponente =
         usuarioRepo
             .findById(proponenteId)
-            .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
+            .orElseThrow(() -> new ResourceNotFoundException("{exception.user.not_found}"));
 
     PropuestaElemento nuevaPropuesta = new PropuestaElemento();
     nuevaPropuesta.setProponente(proponente);
@@ -42,6 +46,8 @@ public class PropuestaElementoService {
     nuevaPropuesta.setDescripcionSugerida(dto.getDescripcionSugerida());
     nuevaPropuesta.setTipoSugerido(dto.getTipoSugerido());
     nuevaPropuesta.setGenerosSugeridos(dto.getGenerosSugeridos());
+    // La imagen puede ser opcional en la propuesta
+    nuevaPropuesta.setUrlImagen(dto.getImagenPortadaUrl());
 
     nuevaPropuesta.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
     nuevaPropuesta.setTotalUnidades(dto.getTotalUnidades());
@@ -50,93 +56,41 @@ public class PropuestaElementoService {
     nuevaPropuesta.setDuracion(dto.getDuracion());
 
     PropuestaElemento propuestaGuardada = propuestaRepo.save(nuevaPropuesta);
-
     return new PropuestaResponseDTO(propuestaGuardada);
   }
 
   @Transactional(readOnly = true)
   public List<PropuestaResponseDTO> getPropuestasPorEstado(EstadoPropuesta estado) {
-    List<PropuestaElemento> propuestas = propuestaRepo.findByEstadoPropuesta(estado);
-    return propuestas.stream().map(PropuestaResponseDTO::new).collect(Collectors.toList());
-  }
-
-  private void updatePropuestaFields(PropuestaElemento propuesta, PropuestaUpdateDTO dto) {
-    propuesta.setDuracion(dto.getDuracion());
-    propuesta.setTituloSugerido(dto.getTituloSugerido());
-    propuesta.setDescripcionSugerida(dto.getDescripcionSugerida());
-    propuesta.setTipoSugerido(dto.getTipoSugerido());
-    propuesta.setGenerosSugeridos(dto.getGenerosSugeridos());
-    propuesta.setUrlImagen(dto.getUrlImagen());
-
-    propuesta.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
-    propuesta.setTotalUnidades(dto.getTotalUnidades());
-    propuesta.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
-    propuesta.setTotalPaginasLibro(dto.getTotalPaginasLibro());
-  }
-
-  public Tipo traducirTipo(String tipoSugerido) {
-    if (tipoSugerido == null || tipoSugerido.isBlank()) {
-      throw new ConflictException("TYPE_EMPTY");
-    }
-    return tipoRepository
-        .findByNombre(tipoSugerido)
-        .orElseGet(() -> tipoRepository.save(new Tipo(tipoSugerido)));
-  }
-
-  public Set<Genero> traducirGeneros(String generosSugeridosString, Tipo tipo) {
-    if (generosSugeridosString == null || generosSugeridosString.isBlank()) {
-      throw new ConflictException("GENRES_EMPTY");
-    }
-    Set<Genero> generosFinales = new HashSet<>();
-    String[] generosSugeridosArray = generosSugeridosString.split("\\s*,\\s*");
-    for (String nombreGenero : generosSugeridosArray) {
-      if (nombreGenero.isBlank()) continue;
-      Genero genero =
-          generoRepository
-              .findByNombre(nombreGenero)
-              .orElseGet(() -> {
-                Genero nuevoGenero = new Genero(nombreGenero);
-                generoRepository.save(nuevoGenero);
-                tipo.getGenerosPermitidos().add(nuevoGenero);
-                tipoRepository.save(tipo);
-                dataSqlSyncService.appendGenreLink(tipo.getNombre(), nuevoGenero.getNombre());
-                return nuevoGenero;
-              });
-
-      if (!tipo.getGenerosPermitidos().contains(genero)) {
-        tipo.getGenerosPermitidos().add(genero);
-        tipoRepository.save(tipo);
-        dataSqlSyncService.appendGenreLink(tipo.getNombre(), genero.getNombre());
-      }
-      generosFinales.add(genero);
-    }
-    if (generosFinales.isEmpty()) {
-      throw new ConflictException("GENRE_INVALID");
-    }
-    return generosFinales;
+    return propuestaRepo.findByEstadoPropuesta(estado).stream()
+        .map(PropuestaResponseDTO::new)
+        .collect(Collectors.toList());
   }
 
   @Transactional
   public ElementoResponseDTO aprobarPropuesta(
       Long propuestaId, Long revisorId, PropuestaUpdateDTO dto) {
-
     Usuario revisor =
         usuarioRepo
             .findById(revisorId)
-            .orElseThrow(() -> new ResourceNotFoundException("REVIEWER_NOT_FOUND"));
+            .orElseThrow(() -> new ResourceNotFoundException("{exception.user.not_found}"));
+
     PropuestaElemento propuesta =
         propuestaRepo
             .findById(propuestaId)
-            .orElseThrow(() -> new ResourceNotFoundException("PROPOSAL_NOT_FOUND"));
+            .orElseThrow(() -> new ResourceNotFoundException("{exception.propuesta.not_found}"));
+
     if (propuesta.getEstadoPropuesta() != EstadoPropuesta.PENDIENTE) {
-      throw new ConflictException("PROPOSAL_ALREADY_HANDLED");
+      throw new ConflictException("{exception.propuesta.already_handled}");
     }
 
-    updatePropuestaFields(propuesta, dto);
+    // Actualizar la propuesta con los datos finales editados por el moderador
+    actualizarDatosPropuesta(propuesta, dto);
 
+    // Procesar tipos y géneros (crear si no existen)
     Tipo tipoFinal = traducirTipo(propuesta.getTipoSugerido());
     Set<Genero> generosFinales = traducirGeneros(propuesta.getGenerosSugeridos(), tipoFinal);
 
+    // Crear el Elemento final
     Elemento nuevoElemento = new Elemento();
     nuevoElemento.setTitulo(propuesta.getTituloSugerido());
     nuevoElemento.setDescripcion(propuesta.getDescripcionSugerida());
@@ -151,13 +105,87 @@ public class PropuestaElementoService {
     nuevoElemento.setTotalUnidades(propuesta.getTotalUnidades());
     nuevoElemento.setTotalCapitulosLibro(propuesta.getTotalCapitulosLibro());
     nuevoElemento.setTotalPaginasLibro(propuesta.getTotalPaginasLibro());
+    nuevoElemento.setDuracion(propuesta.getDuracion());
 
+    // Marcar propuesta como APROBADA
     propuesta.setEstadoPropuesta(EstadoPropuesta.APROBADO);
     propuesta.setRevisor(revisor);
     propuestaRepo.save(propuesta);
 
     Elemento elementoGuardado = elementoRepo.save(nuevoElemento);
-
     return new ElementoResponseDTO(elementoGuardado);
+  }
+
+  // --- Métodos Auxiliares ---
+
+  private void actualizarDatosPropuesta(PropuestaElemento propuesta, PropuestaUpdateDTO dto) {
+    propuesta.setTituloSugerido(dto.getTituloSugerido());
+    propuesta.setDescripcionSugerida(dto.getDescripcionSugerida());
+    propuesta.setTipoSugerido(dto.getTipoSugerido());
+    propuesta.setGenerosSugeridos(dto.getGenerosSugeridos());
+    propuesta.setUrlImagen(dto.getUrlImagen());
+    propuesta.setDuracion(dto.getDuracion());
+    propuesta.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
+    propuesta.setTotalUnidades(dto.getTotalUnidades());
+    propuesta.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
+    propuesta.setTotalPaginasLibro(dto.getTotalPaginasLibro());
+  }
+
+  public Tipo traducirTipo(String tipoSugerido) {
+    if (tipoSugerido == null || tipoSugerido.isBlank()) {
+      throw new ConflictException("{exception.tipo.empty}");
+    }
+    return tipoRepository
+        .findByNombre(tipoSugerido)
+        .orElseGet(() -> tipoRepository.save(new Tipo(tipoSugerido)));
+  }
+
+  public Set<Genero> traducirGeneros(String generosSugeridosString, Tipo tipo) {
+    if (generosSugeridosString == null || generosSugeridosString.isBlank()) {
+      throw new ConflictException("{exception.generos.empty}");
+    }
+
+    Set<Genero> generosFinales = new HashSet<>();
+    String[] generosArray = generosSugeridosString.split("\\s*,\\s*"); // Split por coma y espacios
+
+    for (String nombreGenero : generosArray) {
+      if (nombreGenero.isBlank()) continue;
+
+      Genero genero =
+          generoRepository
+              .findByNombre(nombreGenero)
+              .orElseGet(
+                  () -> {
+                    // Si el género no existe, lo creamos y lo vinculamos al tipo
+                    Genero nuevo = new Genero(nombreGenero);
+                    generoRepository.save(nuevo);
+
+                    // Vincular al tipo y sincronizar SQL
+                    vincularGeneroATipo(tipo, nuevo);
+
+                    return nuevo;
+                  });
+
+      // Asegurar vinculación aunque el género ya existiera
+      if (!tipo.getGenerosPermitidos().contains(genero)) {
+        vincularGeneroATipo(tipo, genero);
+      }
+
+      generosFinales.add(genero);
+    }
+
+    if (generosFinales.isEmpty()) {
+      throw new ConflictException("{exception.generos.invalid}");
+    }
+    return generosFinales;
+  }
+
+  private void vincularGeneroATipo(Tipo tipo, Genero genero) {
+    tipo.getGenerosPermitidos().add(genero);
+    tipoRepository.save(tipo);
+    // Sincronización con archivo data.sql para persistencia entre reinicios si usas H2/memoria
+    // Ojo: En producción real con BD persistente esto no es necesario, pero lo mantengo por tu
+    // lógica actual.
+    dataSqlSyncService.appendGenreLink(tipo.getNombre(), genero.getNombre());
   }
 }

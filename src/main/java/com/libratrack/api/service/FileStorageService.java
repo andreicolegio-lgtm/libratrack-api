@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+/** Servicio para la gestión de subida de archivos (imágenes) a Google Cloud Storage. */
 @Service
 public class FileStorageService {
 
@@ -19,36 +20,47 @@ public class FileStorageService {
   @Value("${gcs.bucket.name}")
   private String bucketName;
 
+  /**
+   * Sube un archivo al bucket configurado y devuelve su URL pública.
+   *
+   * @param file Archivo recibido del cliente.
+   * @return URL pública del recurso subido.
+   * @throws RuntimeException Si el archivo es inválido o falla la subida.
+   */
   public String storeFile(MultipartFile file) {
 
     if (file.isEmpty()) {
-      throw new RuntimeException("FILE_EMPTY");
+      throw new RuntimeException("{exception.file.empty}");
     }
 
-    String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+    String originalFileName =
+        StringUtils.cleanPath(
+            file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown");
+
+    // Validación de seguridad básica
+    if (originalFileName.contains("..")) {
+      throw new RuntimeException("{exception.file.invalid_path}");
+    }
+
+    // Generar nombre único
     String extension = "";
+    int dotIndex = originalFileName.lastIndexOf('.');
+    if (dotIndex > 0) {
+      extension = originalFileName.substring(dotIndex);
+    }
+    String uniqueFileName = UUID.randomUUID().toString() + extension;
 
     try {
-      if (originalFileName.contains("..")) {
-        throw new RuntimeException("INVALID_FILE_NAME");
-      }
-
-      int dotIndex = originalFileName.lastIndexOf('.');
-      if (dotIndex > 0) {
-        extension = originalFileName.substring(dotIndex);
-      }
-      String uniqueFileName = UUID.randomUUID().toString() + extension;
-
       BlobId blobId = BlobId.of(bucketName, uniqueFileName);
-
       BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(file.getContentType()).build();
 
       storage.create(blobInfo, file.getBytes());
 
+      // Retornar URL pública directa
       return "https://storage.googleapis.com/" + bucketName + "/" + uniqueFileName;
 
     } catch (IOException e) {
-      throw new RuntimeException("FILE_SAVE_ERROR");
+      throw new RuntimeException("{exception.file.upload_error}", e);
     }
   }
 }

@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+/** Controlador para que los usuarios normales envíen sugerencias de contenido. */
 @RestController
 @RequestMapping("/api/propuestas")
 @PreAuthorize("hasAuthority('ROLE_USER')")
@@ -19,6 +20,7 @@ public class PropuestaController {
 
   @Autowired private PropuestaElementoService propuestaService;
 
+  /** Envía una nueva propuesta de contenido para revisión. */
   @PostMapping
   public ResponseEntity<PropuestaResponseDTO> createPropuesta(
       @Valid @RequestBody PropuestaRequestDTO dto,

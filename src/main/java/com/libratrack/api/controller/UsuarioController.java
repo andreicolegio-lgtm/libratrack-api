@@ -13,12 +13,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+/** Controlador para la gestión del perfil del usuario actual. */
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
   @Autowired private UsuarioService usuarioService;
 
+  /** Obtiene los datos del perfil del usuario autenticado. */
   @GetMapping("/me")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<UsuarioResponseDTO> getMiPerfil(
@@ -27,6 +29,7 @@ public class UsuarioController {
     return ResponseEntity.ok(perfil);
   }
 
+  /** Actualiza datos básicos del perfil (ej. nombre de usuario). */
   @PutMapping("/me")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<UsuarioResponseDTO> updateMiPerfil(
@@ -37,24 +40,27 @@ public class UsuarioController {
     return ResponseEntity.ok(perfilActualizado);
   }
 
+  /** Cambia la contraseña del usuario. */
   @PutMapping("/me/password")
   @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<String> updateMyPassword(
+  public ResponseEntity<Map<String, String>> updateMyPassword(
       @AuthenticationPrincipal CustomUserDetails currentUser,
       @Valid @RequestBody PasswordChangeDTO passwordDto) {
-    usuarioService.changePasswordById(currentUser.getId(), passwordDto);
-    return ResponseEntity.ok().body("Contraseña actualizada con éxito.");
+    return usuarioService.changePasswordById(currentUser.getId(), passwordDto);
   }
 
+  /** Actualiza la URL de la foto de perfil. */
   @PutMapping("/me/foto")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<UsuarioResponseDTO> updateFotoPerfil(
       @AuthenticationPrincipal CustomUserDetails currentUser,
       @RequestBody Map<String, String> body) {
+
     String fotoUrl = body.get("url");
     if (fotoUrl == null || fotoUrl.isBlank()) {
       return ResponseEntity.badRequest().build();
     }
+
     UsuarioResponseDTO perfilActualizado =
         usuarioService.updateFotoPerfilById(currentUser.getId(), fotoUrl);
     return ResponseEntity.ok(perfilActualizado);

@@ -4,6 +4,9 @@ import com.libratrack.api.entity.PropuestaElemento;
 import com.libratrack.api.model.EstadoPropuesta;
 import java.time.LocalDateTime;
 
+/**
+ * DTO para mostrar los detalles de una propuesta en el panel de moderación o historial de usuario.
+ */
 public class PropuestaResponseDTO {
 
   private Long id;
@@ -38,16 +41,22 @@ public class PropuestaResponseDTO {
     this.totalUnidades = p.getTotalUnidades();
     this.totalCapitulosLibro = p.getTotalCapitulosLibro();
     this.totalPaginasLibro = p.getTotalPaginasLibro();
+    this.duracion = p.getDuracion();
 
-    this.proponenteUsername = p.getProponente().getUsername();
+    if (p.getProponente() != null) {
+      this.proponenteUsername = p.getProponente().getUsername();
+    } else {
+      this.proponenteUsername = "Desconocido";
+    }
+
     if (p.getRevisor() != null) {
       this.revisorUsername = p.getRevisor().getUsername();
     } else {
       this.revisorUsername = null;
     }
-    this.duracion = p.getDuracion();
   }
 
+  // Getters
   public Long getId() {
     return id;
   }
@@ -106,9 +115,5 @@ public class PropuestaResponseDTO {
 
   public String getDuracion() {
     return duracion;
-  }
-
-  public void setDuracion(String duracion) {
-    this.duracion = duracion;
   }
 }

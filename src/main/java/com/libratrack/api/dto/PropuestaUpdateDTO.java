@@ -4,39 +4,43 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * DTO utilizado por moderadores para editar y corregir una propuesta antes de su aprobación final.
+ */
 public class PropuestaUpdateDTO {
 
-  @NotBlank(message = "VALIDATION_TITLE_REQUIRED")
-  @Size(max = 255, message = "VALIDATION_TITLE_MAX_255")
+  @NotBlank(message = "{validation.propuesta.titulo.required}")
+  @Size(max = 255, message = "{validation.propuesta.titulo.size}")
   private String tituloSugerido;
 
-  @NotBlank(message = "VALIDATION_DESC_REQUIRED")
-  @Size(max = 5000, message = "VALIDATION_DESC_MAX_5000")
+  @NotBlank(message = "{validation.propuesta.descripcion.required}")
+  @Size(max = 5000, message = "{validation.propuesta.descripcion.size}")
   private String descripcionSugerida;
 
-  @NotBlank(message = "VALIDATION_TYPE_REQUIRED")
+  @NotBlank(message = "{validation.propuesta.tipo.required}")
   private String tipoSugerido;
 
-  @NotBlank(message = "VALIDATION_GENRES_REQUIRED")
+  @NotBlank(message = "{validation.propuesta.generos.required}")
   private String generosSugeridos;
 
   @Size(max = 255)
   private String urlImagen;
 
-  @Size(max = 255, message = "VALIDATION_EPISODES_STRING_MAX_255")
+  @Size(max = 255, message = "{validation.propuesta.episodios.size}")
   private String episodiosPorTemporada;
 
-  @Min(value = 1, message = "VALIDATION_UNITS_MIN_1")
+  @Min(value = 1, message = "{validation.propuesta.unidades.min}")
   private Integer totalUnidades;
 
-  @Min(value = 1, message = "VALIDATION_CHAPTERS_MIN_1")
+  @Min(value = 1, message = "{validation.propuesta.capitulos.min}")
   private Integer totalCapitulosLibro;
 
-  @Min(value = 1, message = "VALIDATION_PAGES_MIN_1")
+  @Min(value = 1, message = "{validation.propuesta.paginas.min}")
   private Integer totalPaginasLibro;
 
   private String duracion;
 
+  // Getters y Setters
   public String getTituloSugerido() {
     return tituloSugerido;
   }

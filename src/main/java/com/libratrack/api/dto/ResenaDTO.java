@@ -5,19 +5,21 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+/** DTO para crear una nueva reseña. */
 public class ResenaDTO {
 
-  @NotNull(message = "VALIDATION_ELEMENT_ID_REQUIRED")
+  @NotNull(message = "{validation.resena.elemento.required}")
   private Long elementoId;
 
-  @NotNull(message = "VALIDATION_RATING_REQUIRED")
-  @Min(value = 1, message = "VALIDATION_RATING_MIN_1")
-  @Max(value = 5, message = "VALIDATION_RATING_MAX_5")
+  @NotNull(message = "{validation.resena.valoracion.required}")
+  @Min(value = 1, message = "{validation.resena.valoracion.min}")
+  @Max(value = 5, message = "{validation.resena.valoracion.max}")
   private Integer valoracion;
 
-  @Size(max = 2000, message = "VALIDATION_REVIEW_MAX_2000")
+  @Size(max = 2000, message = "{validation.resena.texto.size}")
   private String textoResena;
 
+  // Getters y Setters
   public Long getElementoId() {
     return elementoId;
   }

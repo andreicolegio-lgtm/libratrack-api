@@ -9,6 +9,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+/**
+ * Implementación personalizada de {@link UserDetails} de Spring Security.
+ *
+ * <p>Esta clase actúa como un adaptador (Wrapper) alrededor de nuestra entidad de dominio {@link
+ * Usuario}. Permite que Spring Security entienda cómo acceder a la información crítica de seguridad
+ * (contraseña, roles, estado de la cuenta) de nuestros usuarios.
+ */
 public class CustomUserDetails implements UserDetails {
 
   private Long id;
@@ -23,17 +30,27 @@ public class CustomUserDetails implements UserDetails {
     this.email = usuario.getEmail();
     this.password = usuario.getPassword();
 
+    // Conversión de roles booleanos a Authorities de Spring Security
     Set<GrantedAuthority> auths = new HashSet<>();
+
+    // Rol base para todos
     auths.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+    // Roles jerárquicos
     if (usuario.esAdmin()) {
       auths.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-      auths.add(new SimpleGrantedAuthority("ROLE_MODERADOR"));
+      auths.add(new SimpleGrantedAuthority("ROLE_MODERADOR")); // Admin implica Moderador
     } else if (usuario.esMod()) {
       auths.add(new SimpleGrantedAuthority("ROLE_MODERADOR"));
     }
+
     this.authorities = auths;
   }
 
+  /**
+   * Devuelve el ID único del usuario en nuestra base de datos. Útil para lógica de negocio que
+   * requiere el ID numérico.
+   */
   public Long getId() {
     return id;
   }
@@ -41,6 +58,8 @@ public class CustomUserDetails implements UserDetails {
   public String getEmail() {
     return email;
   }
+
+  // --- Métodos de la interfaz UserDetails ---
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -57,25 +76,47 @@ public class CustomUserDetails implements UserDetails {
     return username;
   }
 
+  /**
+   * Indica si la cuenta del usuario ha expirado.
+   *
+   * @return true si la cuenta es válida (no expirada).
+   */
   @Override
   public boolean isAccountNonExpired() {
     return true;
   }
 
+  /**
+   * Indica si la cuenta está bloqueada o suspendida.
+   *
+   * @return true si la cuenta no está bloqueada.
+   */
   @Override
   public boolean isAccountNonLocked() {
     return true;
   }
 
+  /**
+   * Indica si las credenciales (contraseña) han expirado.
+   *
+   * @return true si las credenciales son válidas.
+   */
   @Override
   public boolean isCredentialsNonExpired() {
     return true;
   }
 
+  /**
+   * Indica si el usuario está habilitado o deshabilitado.
+   *
+   * @return true si el usuario está habilitado.
+   */
   @Override
   public boolean isEnabled() {
     return true;
   }
+
+  // --- Métodos Object ---
 
   @Override
   public boolean equals(Object o) {

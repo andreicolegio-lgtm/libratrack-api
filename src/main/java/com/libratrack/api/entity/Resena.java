@@ -6,46 +6,83 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
+/**
+ * Representa una opinión o valoración escrita por un usuario sobre un elemento específico.
+ *
+ * <p>Cada usuario puede escribir una única reseña por elemento, garantizado por la restricción
+ * única en la base de datos (usuario_id + elemento_id).
+ */
 @Entity
 @Table(
     name = "resenas",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"usuario_id", "elemento_id"})})
+    uniqueConstraints = {
+      @UniqueConstraint(
+          columnNames = {"usuario_id", "elemento_id"},
+          name = "uk_resena_usuario_elemento")
+    })
 public class Resena {
+
+  // =============================================================================================
+  // IDENTIFICADOR
+  // =============================================================================================
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  // =============================================================================================
+  // RELACIONES
+  // =============================================================================================
+
+  /** Usuario autor de la reseña. */
+  @NotNull(message = "{validation.resena.usuario.required}")
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "usuario_id", nullable = false)
-  @NotNull
   private Usuario usuario;
 
+  /** Elemento sobre el cual se opina. */
+  @NotNull(message = "{validation.resena.elemento.required}")
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "elemento_id", nullable = false)
-  @NotNull
   private Elemento elemento;
 
-  @Min(value = 1, message = "VALIDATION_RATING_MIN_1")
-  @Max(value = 5, message = "VALIDATION_RATING_MAX_5")
+  // =============================================================================================
+  // CONTENIDO
+  // =============================================================================================
+
+  /** Puntuación numérica del 1 al 5. */
+  @Min(value = 1, message = "{validation.resena.valoracion.min}")
+  @Max(value = 5, message = "{validation.resena.valoracion.max}")
   @Column(nullable = false)
-  @NotNull(message = "VALIDATION_RATING_REQUIRED")
+  @NotNull(message = "{validation.resena.valoracion.required}")
   private Integer valoracion;
 
-  @Size(max = 2000, message = "VALIDATION_REVIEW_MAX_2000")
+  /** Texto opcional de la opinión. */
+  @Size(max = 2000, message = "{validation.resena.texto.size}")
   @Lob
+  @Column(columnDefinition = "TEXT")
   private String textoResena;
 
+  /** Fecha de publicación. No se puede modificar una vez creada. */
   @Column(nullable = false, updatable = false)
   private LocalDateTime fechaCreacion;
+
+  // =============================================================================================
+  // CONSTRUCTORES & CICLO DE VIDA
+  // =============================================================================================
+
+  public Resena() {}
 
   @PrePersist
   protected void onCrear() {
     this.fechaCreacion = LocalDateTime.now();
   }
 
-  public Resena() {}
+  // =============================================================================================
+  // GETTERS Y SETTERS
+  // =============================================================================================
 
   public Long getId() {
     return id;
@@ -93,5 +130,34 @@ public class Resena {
 
   public void setFechaCreacion(LocalDateTime fechaCreacion) {
     this.fechaCreacion = fechaCreacion;
+  }
+
+  // =============================================================================================
+  // EQUALS, HASHCODE & TOSTRING
+  // =============================================================================================
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Resena resena = (Resena) o;
+    return id != null && Objects.equals(id, resena.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return getClass().hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return "Resena{"
+        + "id="
+        + id
+        + ", valoracion="
+        + valoracion
+        + ", fechaCreacion="
+        + fechaCreacion
+        + '}';
   }
 }

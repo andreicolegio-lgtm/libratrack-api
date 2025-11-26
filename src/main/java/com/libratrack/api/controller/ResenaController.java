@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+/** Controlador para gestionar las reseñas y valoraciones de los usuarios. */
 @RestController
 @RequestMapping("/api/resenas")
 @PreAuthorize("hasAuthority('ROLE_USER')")
@@ -20,6 +21,7 @@ public class ResenaController {
 
   @Autowired private ResenaService resenaService;
 
+  /** Obtiene todas las reseñas de un elemento específico. */
   @GetMapping("/elemento/{elementoId}")
   public ResponseEntity<List<ResenaResponseDTO>> getResenasDelElemento(
       @PathVariable Long elementoId) {
@@ -27,6 +29,9 @@ public class ResenaController {
     return ResponseEntity.ok(resenas);
   }
 
+  /**
+   * Crea una nueva reseña para un elemento. El usuario solo puede crear una reseña por elemento.
+   */
   @PostMapping
   public ResponseEntity<ResenaResponseDTO> createResena(
       @Valid @RequestBody ResenaDTO resenaDTO,

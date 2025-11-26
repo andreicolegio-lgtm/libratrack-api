@@ -19,7 +19,6 @@ import jakarta.validation.Valid;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +32,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controlador público para autenticación y registro de usuarios. Maneja Login (Email/Pass y
+ * Google), Registro y Refresco de Tokens.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -48,9 +51,9 @@ public class AuthController {
   @Autowired private UsuarioRepository usuarioRepository;
   @Autowired private RefreshTokenService refreshTokenService;
 
+  /** Inicio de sesión o Registro mediante Google Identity Services. */
   @PostMapping("/google")
   public ResponseEntity<?> loginWithGoogle(@Valid @RequestBody GoogleTokenDTO googleTokenDTO) {
-
     GoogleIdTokenVerifier verifier =
         new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance())
             .setAudience(Collections.singletonList(googleWebClientId))
@@ -60,8 +63,8 @@ public class AuthController {
       GoogleIdToken idToken = verifier.verify(googleTokenDTO.getToken());
       if (idToken == null) {
         logger.warn("Intento de login con token de Google inválido.");
-        return new ResponseEntity<>(
-            Map.of("error", "E_GOOGLE_TOKEN_INVALID"), HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(Map.of("error", "{exception.auth.google_token_invalid}"));
       }
 
       GoogleIdToken.Payload payload = idToken.getPayload();
@@ -70,73 +73,68 @@ public class AuthController {
       String accessToken = jwtService.generateToken(usuario.getId());
       RefreshToken refreshToken = refreshTokenService.createRefreshToken(usuario.getUsername());
 
-      logger.info("Login (Google) exitoso para: {}", usuario.getEmail());
-
-      return new ResponseEntity<>(
-          new LoginResponseDTO(accessToken, refreshToken.getToken()), HttpStatus.OK);
+      logger.info("Login exitoso (Google) para: {}", usuario.getEmail());
+      return ResponseEntity.ok(new LoginResponseDTO(accessToken, refreshToken.getToken()));
 
     } catch (GeneralSecurityException | IOException e) {
-      logger.error("Error al verificar el token de Google: {}", e.getMessage());
-      return new ResponseEntity<>(
-          Map.of("error", "E_GOOGLE_TOKEN_ERROR"), HttpStatus.INTERNAL_SERVER_ERROR);
-    } catch (Exception e) {
-      logger.error("Error inesperado en login con Google: {}", e.getMessage(), e);
-      return new ResponseEntity<>(
-          Map.of("error", "INTERNAL_SERVER_ERROR"), HttpStatus.INTERNAL_SERVER_ERROR);
+      logger.error("Error verificando token Google", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("error", "{exception.auth.google_verify_error}"));
     }
   }
 
+  /** Registro de nuevo usuario con Email y Contraseña. */
   @PostMapping("/register")
   public ResponseEntity<UsuarioResponseDTO> registerUser(@Valid @RequestBody Usuario usuario) {
     UsuarioResponseDTO usuarioRegistrado = usuarioService.registrarUsuario(usuario);
     return new ResponseEntity<>(usuarioRegistrado, HttpStatus.CREATED);
   }
 
+  /** Inicio de sesión clásico con Email y Contraseña. */
   @PostMapping("/login")
   public ResponseEntity<?> loginUser(@RequestBody Map<String, String> loginRequest) {
     String email = loginRequest.getOrDefault("email", "").trim();
     String password = loginRequest.getOrDefault("password", "").trim();
 
     if (email.isEmpty() || password.isEmpty()) {
-      throw new ConflictException("E_INVALID_CREDENTIALS");
+      throw new ConflictException("{exception.auth.credentials_empty}");
     }
 
     try {
+      // 1. Buscar usuario por email para obtener su username (necesario para Spring Security)
       Usuario usuario =
           usuarioRepository
               .findByEmail(email)
-              .orElseThrow(() -> new UsernameNotFoundException("E_INVALID_CREDENTIALS"));
+              .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-      String username = usuario.getUsername();
+      // 2. Autenticar con Spring Security
+      authenticationManager.authenticate(
+          new UsernamePasswordAuthenticationToken(usuario.getUsername(), password));
 
-      UsernamePasswordAuthenticationToken authToken =
-          new UsernamePasswordAuthenticationToken(username, password);
-      authenticationManager.authenticate(authToken);
-
+      // 3. Generar Tokens
       String accessToken = jwtService.generateToken(usuario.getId());
-      RefreshToken refreshToken = refreshTokenService.createRefreshToken(username);
+      RefreshToken refreshToken = refreshTokenService.createRefreshToken(usuario.getUsername());
 
-      return new ResponseEntity<>(
-          new LoginResponseDTO(accessToken, refreshToken.getToken()), HttpStatus.OK);
+      return ResponseEntity.ok(new LoginResponseDTO(accessToken, refreshToken.getToken()));
 
     } catch (UsernameNotFoundException | BadCredentialsException e) {
-      logger.warn("Login failed (BadCredentials) for email: {}", email);
-      throw new ConflictException("E_INVALID_CREDENTIALS");
-
+      logger.warn("Fallo de autenticación para email: {}", email);
+      throw new ConflictException("{exception.auth.credentials_invalid}");
     } catch (Exception e) {
-      logger.error("Unexpected error during login for email: {}", email, e);
-      return new ResponseEntity<>(
-          Map.of("error", "INTERNAL_SERVER_ERROR"), HttpStatus.INTERNAL_SERVER_ERROR);
+      logger.error("Error inesperado en login", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("error", "{exception.internal_server_error}"));
     }
   }
 
+  /** Renueva el Access Token utilizando un Refresh Token válido. */
   @PostMapping("/refresh")
   public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
     String requestRefreshToken = request.get("refreshToken");
 
     if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
-      return new ResponseEntity<>(
-          Map.of("error", "E_REFRESH_TOKEN_REQUIRED"), HttpStatus.BAD_REQUEST);
+      return ResponseEntity.badRequest()
+          .body(Map.of("error", "{exception.auth.refresh_token_required}"));
     }
 
     try {
@@ -145,40 +143,28 @@ public class AuthController {
               .findByToken(requestRefreshToken)
               .orElseThrow(
                   () ->
-                      new TokenRefreshException(requestRefreshToken, "E_REFRESH_TOKEN_NOT_FOUND"));
+                      new TokenRefreshException(
+                          requestRefreshToken, "{exception.token.refresh.not_found}"));
 
       refreshTokenService.verifyExpiration(refreshToken);
+
       Usuario usuario = refreshToken.getUsuario();
       String newAccessToken = jwtService.generateToken(usuario.getId());
 
       return ResponseEntity.ok(new LoginResponseDTO(newAccessToken, requestRefreshToken));
 
     } catch (TokenRefreshException e) {
-      logger.warn("Intento de refresco fallido: {}", e.getMessage());
-      return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.FORBIDDEN);
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
     }
   }
 
+  /** Cierra sesión invalidando el Refresh Token. */
   @PostMapping("/logout")
   public ResponseEntity<?> logoutUser(@RequestBody Map<String, String> request) {
     String requestRefreshToken = request.get("refreshToken");
-
-    if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
-      return new ResponseEntity<>(
-          Map.of("error", "E_REFRESH_TOKEN_REQUIRED"), HttpStatus.BAD_REQUEST);
-    }
-
-    try {
+    if (requestRefreshToken != null && !requestRefreshToken.isBlank()) {
       refreshTokenService.deleteByToken(requestRefreshToken);
-
-      Map<String, String> response = new HashMap<>();
-      response.put("message", "LOGOUT_SUCCESSFUL");
-
-      return ResponseEntity.ok(response);
-    } catch (Exception e) {
-      logger.error("Error during logout", e);
-      return new ResponseEntity<>(
-          Map.of("error", "INTERNAL_SERVER_ERROR"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    return ResponseEntity.ok(Map.of("message", "{message.logout_successful}"));
   }
 }

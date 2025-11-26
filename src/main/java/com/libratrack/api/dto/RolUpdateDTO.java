@@ -2,14 +2,19 @@ package com.libratrack.api.dto;
 
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * DTO para la gestión de permisos y roles de usuario (Admin/Moderador). Utilizado exclusivamente
+ * por administradores.
+ */
 public class RolUpdateDTO {
 
-  @NotNull(message = "VALIDATION_MOD_STATUS_REQUIRED")
+  @NotNull(message = "{validation.rol.moderador.required}")
   private Boolean esModerador;
 
-  @NotNull(message = "VALIDATION_ADMIN_STATUS_REQUIRED")
+  @NotNull(message = "{validation.rol.admin.required}")
   private Boolean esAdministrador;
 
+  // Getters y Setters
   public Boolean getEsModerador() {
     return esModerador;
   }

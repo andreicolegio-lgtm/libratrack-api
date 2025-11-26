@@ -2,6 +2,11 @@ package com.libratrack.api.dto;
 
 import com.libratrack.api.entity.Elemento;
 
+/**
+ * DTO ligero para representar referencias a elementos (ej. en listas de secuelas, resultados de
+ * búsqueda rápida). Contiene solo la información mínima necesaria para identificar visualmente el
+ * contenido.
+ */
 public class ElementoRelacionDTO {
 
   private Long id;
@@ -14,6 +19,7 @@ public class ElementoRelacionDTO {
     this.urlImagen = elemento.getUrlImagen();
   }
 
+  // Getters
   public Long getId() {
     return id;
   }

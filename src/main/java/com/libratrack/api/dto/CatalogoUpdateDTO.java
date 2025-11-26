@@ -3,22 +3,27 @@ package com.libratrack.api.dto;
 import com.libratrack.api.model.EstadoPersonal;
 import jakarta.validation.constraints.Min;
 
+/**
+ * DTO para actualizar el estado o progreso de un elemento en el catálogo personal. Todos los campos
+ * son opcionales; solo se actualizan los enviados (PATCH style).
+ */
 public class CatalogoUpdateDTO {
 
   private EstadoPersonal estadoPersonal;
 
-  @Min(value = 1, message = "VALIDATION_SEASON_MIN_1")
+  @Min(value = 1, message = "{validation.catalogo.temporada.min}")
   private Integer temporadaActual;
 
-  @Min(value = 0, message = "VALIDATION_UNIT_MIN_0")
+  @Min(value = 0, message = "{validation.catalogo.unidad.min}")
   private Integer unidadActual;
 
-  @Min(value = 0, message = "VALIDATION_CHAPTER_MIN_0")
+  @Min(value = 0, message = "{validation.catalogo.capitulo.min}")
   private Integer capituloActual;
 
-  @Min(value = 0, message = "VALIDATION_PAGE_MIN_0")
+  @Min(value = 0, message = "{validation.catalogo.pagina.min}")
   private Integer paginaActual;
 
+  // Getters y Setters
   public EstadoPersonal getEstadoPersonal() {
     return estadoPersonal;
   }

@@ -5,23 +5,30 @@ import com.libratrack.api.model.EstadoPersonal;
 import com.libratrack.api.model.EstadoPublicacion;
 import java.time.LocalDateTime;
 
+/**
+ * DTO para enviar los datos de una entrada del catálogo personal al cliente. Incluye información
+ * combinada de la entrada personal y detalles resumen del elemento asociado.
+ */
 public class CatalogoPersonalResponseDTO {
 
   private Long id;
   private EstadoPersonal estadoPersonal;
   private LocalDateTime agregadoEn;
+  private Boolean esFavorito;
 
   private Integer temporadaActual;
   private Integer unidadActual;
   private Integer capituloActual;
   private Integer paginaActual;
 
+  // Datos del Elemento asociado (aplanados para facilitar el consumo en frontend)
   private Long elementoId;
   private String elementoTitulo;
   private String elementoTipoNombre;
   private String elementoUrlImagen;
-
   private EstadoPublicacion elementoEstadoPublicacion;
+
+  // Detalles técnicos del elemento para calcular progreso (ej. 5/12 caps)
   private String elementoEpisodiosPorTemporada;
   private Integer elementoTotalUnidades;
   private Integer elementoTotalCapitulosLibro;
@@ -33,26 +40,35 @@ public class CatalogoPersonalResponseDTO {
     this.id = entrada.getId();
     this.estadoPersonal = entrada.getEstadoPersonal();
     this.agregadoEn = entrada.getAgregadoEn();
+    this.esFavorito = entrada.getEsFavorito();
 
     this.temporadaActual = entrada.getTemporadaActual();
     this.unidadActual = entrada.getUnidadActual();
     this.capituloActual = entrada.getCapituloActual();
     this.paginaActual = entrada.getPaginaActual();
 
-    this.elementoId = entrada.getElemento().getId();
-    this.elementoTitulo = entrada.getElemento().getTitulo();
-    this.elementoTipoNombre = entrada.getElemento().getTipo().getNombre();
-    this.elementoUrlImagen = entrada.getElemento().getUrlImagen();
+    if (entrada.getElemento() != null) {
+      this.elementoId = entrada.getElemento().getId();
+      this.elementoTitulo = entrada.getElemento().getTitulo();
+      this.elementoUrlImagen = entrada.getElemento().getUrlImagen();
+      this.elementoEstadoPublicacion = entrada.getElemento().getEstadoPublicacion();
 
-    this.elementoEstadoPublicacion = entrada.getElemento().getEstadoPublicacion();
-    this.elementoEpisodiosPorTemporada = entrada.getElemento().getEpisodiosPorTemporada();
-    this.elementoTotalUnidades = entrada.getElemento().getTotalUnidades();
-    this.elementoTotalCapitulosLibro = entrada.getElemento().getTotalCapitulosLibro();
-    this.elementoTotalPaginasLibro = entrada.getElemento().getTotalPaginasLibro();
+      this.elementoEpisodiosPorTemporada = entrada.getElemento().getEpisodiosPorTemporada();
+      this.elementoTotalUnidades = entrada.getElemento().getTotalUnidades();
+      this.elementoTotalCapitulosLibro = entrada.getElemento().getTotalCapitulosLibro();
+      this.elementoTotalPaginasLibro = entrada.getElemento().getTotalPaginasLibro();
 
-    this.usuarioId = entrada.getUsuario().getId();
+      if (entrada.getElemento().getTipo() != null) {
+        this.elementoTipoNombre = entrada.getElemento().getTipo().getNombre();
+      }
+    }
+
+    if (entrada.getUsuario() != null) {
+      this.usuarioId = entrada.getUsuario().getId();
+    }
   }
 
+  // Getters
   public Long getId() {
     return id;
   }
@@ -63,6 +79,10 @@ public class CatalogoPersonalResponseDTO {
 
   public LocalDateTime getAgregadoEn() {
     return agregadoEn;
+  }
+
+  public Boolean getEsFavorito() {
+    return esFavorito;
   }
 
   public Integer getTemporadaActual() {

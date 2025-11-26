@@ -10,6 +10,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 
+/**
+ * DTO completo para mostrar los detalles de un Elemento. Incluye lógica defensiva para manejar
+ * relaciones Lazy que podrían no estar inicializadas.
+ */
 public class ElementoResponseDTO {
 
   private Long id;
@@ -33,7 +37,6 @@ public class ElementoResponseDTO {
   private String duracion;
 
   public ElementoResponseDTO(Elemento elemento) {
-
     this.id = elemento.getId();
     this.titulo = elemento.getTitulo();
     this.descripcion = elemento.getDescripcion();
@@ -47,18 +50,21 @@ public class ElementoResponseDTO {
     this.totalPaginasLibro = elemento.getTotalPaginasLibro();
     this.duracion = elemento.getDuracion();
 
+    // Inicialización segura de Tipo
     if (Hibernate.isInitialized(elemento.getTipo()) && elemento.getTipo() != null) {
       this.tipoNombre = elemento.getTipo().getNombre();
     } else {
       this.tipoNombre = null;
     }
 
+    // Inicialización segura de Creador
     if (Hibernate.isInitialized(elemento.getCreador()) && elemento.getCreador() != null) {
       this.creadorUsername = elemento.getCreador().getUsername();
     } else {
-      this.creadorUsername = "OFICIAL";
+      this.creadorUsername = "OFICIAL"; // Valor por defecto si no hay creador visible o es null
     }
 
+    // Inicialización segura de Géneros
     if (Hibernate.isInitialized(elemento.getGeneros()) && elemento.getGeneros() != null) {
       this.generos =
           elemento.getGeneros().stream().map(Genero::getNombre).collect(Collectors.toSet());
@@ -66,6 +72,7 @@ public class ElementoResponseDTO {
       this.generos = Collections.emptySet();
     }
 
+    // Inicialización segura de Precuelas
     if (Hibernate.isInitialized(elemento.getPrecuelas()) && elemento.getPrecuelas() != null) {
       this.precuelas =
           elemento.getPrecuelas().stream()
@@ -75,6 +82,7 @@ public class ElementoResponseDTO {
       this.precuelas = Collections.emptySet();
     }
 
+    // Inicialización segura de Secuelas
     if (Hibernate.isInitialized(elemento.getSecuelas()) && elemento.getSecuelas() != null) {
       this.secuelas =
           elemento.getSecuelas().stream().map(ElementoRelacionDTO::new).collect(Collectors.toSet());
@@ -83,68 +91,133 @@ public class ElementoResponseDTO {
     }
   }
 
+  // Getters y Setters
   public Long getId() {
     return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
   }
 
   public String getTitulo() {
     return titulo;
   }
 
+  public void setTitulo(String titulo) {
+    this.titulo = titulo;
+  }
+
   public String getDescripcion() {
     return descripcion;
+  }
+
+  public void setDescripcion(String descripcion) {
+    this.descripcion = descripcion;
   }
 
   public String getUrlImagen() {
     return urlImagen;
   }
 
+  public void setUrlImagen(String urlImagen) {
+    this.urlImagen = urlImagen;
+  }
+
   public LocalDate getFechaLanzamiento() {
     return fechaLanzamiento;
+  }
+
+  public void setFechaLanzamiento(LocalDate fechaLanzamiento) {
+    this.fechaLanzamiento = fechaLanzamiento;
   }
 
   public String getTipoNombre() {
     return tipoNombre;
   }
 
+  public void setTipoNombre(String tipoNombre) {
+    this.tipoNombre = tipoNombre;
+  }
+
   public EstadoContenido getEstadoContenido() {
     return estadoContenido;
+  }
+
+  public void setEstadoContenido(EstadoContenido estadoContenido) {
+    this.estadoContenido = estadoContenido;
   }
 
   public String getCreadorUsername() {
     return creadorUsername;
   }
 
+  public void setCreadorUsername(String creadorUsername) {
+    this.creadorUsername = creadorUsername;
+  }
+
   public Set<String> getGeneros() {
     return generos;
+  }
+
+  public void setGeneros(Set<String> generos) {
+    this.generos = generos;
   }
 
   public EstadoPublicacion getEstadoPublicacion() {
     return estadoPublicacion;
   }
 
+  public void setEstadoPublicacion(EstadoPublicacion estadoPublicacion) {
+    this.estadoPublicacion = estadoPublicacion;
+  }
+
   public String getEpisodiosPorTemporada() {
     return episodiosPorTemporada;
+  }
+
+  public void setEpisodiosPorTemporada(String episodiosPorTemporada) {
+    this.episodiosPorTemporada = episodiosPorTemporada;
   }
 
   public Integer getTotalUnidades() {
     return totalUnidades;
   }
 
+  public void setTotalUnidades(Integer totalUnidades) {
+    this.totalUnidades = totalUnidades;
+  }
+
   public Integer getTotalCapitulosLibro() {
     return totalCapitulosLibro;
+  }
+
+  public void setTotalCapitulosLibro(Integer totalCapitulosLibro) {
+    this.totalCapitulosLibro = totalCapitulosLibro;
   }
 
   public Integer getTotalPaginasLibro() {
     return totalPaginasLibro;
   }
 
+  public void setTotalPaginasLibro(Integer totalPaginasLibro) {
+    this.totalPaginasLibro = totalPaginasLibro;
+  }
+
   public Set<ElementoRelacionDTO> getPrecuelas() {
     return precuelas;
   }
 
+  public void setPrecuelas(Set<ElementoRelacionDTO> precuelas) {
+    this.precuelas = precuelas;
+  }
+
   public Set<ElementoRelacionDTO> getSecuelas() {
     return secuelas;
+  }
+
+  public void setSecuelas(Set<ElementoRelacionDTO> secuelas) {
+    this.secuelas = secuelas;
   }
 
   public String getDuracion() {

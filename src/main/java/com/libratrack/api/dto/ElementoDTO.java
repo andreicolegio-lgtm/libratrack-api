@@ -5,28 +5,33 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.Set;
 
+/**
+ * DTO para la creación o transferencia básica de datos de un Elemento. Utilizado principalmente en
+ * operaciones internas o APIs simplificadas.
+ */
 public class ElementoDTO {
 
-  @NotBlank(message = "VALIDATION_TITLE_REQUIRED")
+  @NotBlank(message = "{validation.elemento.titulo.required}")
   private String titulo;
 
-  @NotBlank(message = "VALIDATION_DESC_REQUIRED")
+  @NotBlank(message = "{validation.elemento.descripcion.required}")
   private String descripcion;
 
   private String urlImagen;
   private LocalDate fechaLanzamiento;
 
-  @NotNull(message = "VALIDATION_TYPE_ID_REQUIRED")
+  @NotNull(message = "{validation.elemento.tipo.required}")
   private Long tipoId;
 
-  @NotNull(message = "VALIDATION_CREATOR_ID_REQUIRED")
+  @NotNull(message = "{validation.elemento.creador.required}")
   private Long creadorId;
 
-  @NotNull(message = "VALIDATION_GENRE_IDS_REQUIRED")
+  @NotNull(message = "{validation.elemento.generos.required}")
   private Set<Long> generoIds;
 
   private String duracion;
 
+  // Getters y Setters
   public String getTitulo() {
     return titulo;
   }

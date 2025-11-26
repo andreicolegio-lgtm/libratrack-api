@@ -4,31 +4,54 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.Objects;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
+/**
+ * Representa a un usuario registrado en la plataforma.
+ *
+ * <p>Gestiona las credenciales de acceso, información de perfil y roles de sistema (Administrador,
+ * Moderador).
+ */
 @Entity
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Table(name = "usuarios")
 public class Usuario {
 
+  // =============================================================================================
+  // IDENTIFICADOR
+  // =============================================================================================
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  // =============================================================================================
+  // CREDENCIALES Y PERFIL
+  // =============================================================================================
+
+  @NotBlank(message = "{validation.usuario.username.required}")
+  @Size(min = 4, max = 50, message = "{validation.usuario.username.size}")
   @Column(unique = true, nullable = false, length = 50)
-  @NotBlank(message = "VALIDATION_USERNAME_REQUIRED")
-  @Size(min = 4, max = 50, message = "VALIDATION_USERNAME_LENGTH_4_50")
   private String username;
 
+  @NotBlank(message = "{validation.usuario.email.required}")
+  @Email(message = "{validation.usuario.email.format}")
   @Column(unique = true, nullable = false, length = 100)
-  @NotBlank(message = "VALIDATION_EMAIL_REQUIRED")
-  @Email(message = "VALIDATION_EMAIL_INVALID")
   private String email;
 
+  /** Contraseña encriptada (BCrypt). Nunca debe almacenarse en texto plano. */
+  @NotBlank(message = "{validation.usuario.password.required}")
   @Column(nullable = false)
-  @NotBlank(message = "VALIDATION_PASSWORD_REQUIRED")
   private String password;
+
+  @Column(length = 255)
+  private String fotoPerfilUrl;
+
+  // =============================================================================================
+  // ROLES Y PERMISOS
+  // =============================================================================================
 
   @Column(nullable = false)
   private Boolean esModerador = false;
@@ -36,8 +59,9 @@ public class Usuario {
   @Column(nullable = false)
   private Boolean esAdministrador = false;
 
-  @Column(length = 255)
-  private String fotoPerfilUrl;
+  // =============================================================================================
+  // CONSTRUCTORES
+  // =============================================================================================
 
   public Usuario() {}
 
@@ -46,6 +70,29 @@ public class Usuario {
     this.email = email;
     this.password = password;
   }
+
+  // =============================================================================================
+  // MÉTODOS DE UTILIDAD (NO PERSISTENTES)
+  // =============================================================================================
+
+  /** Verifica si el usuario tiene privilegios de administrador. */
+  @Transient
+  public boolean esAdmin() {
+    return Boolean.TRUE.equals(this.esAdministrador);
+  }
+
+  /**
+   * Verifica si el usuario tiene privilegios de moderación. Un administrador es implícitamente un
+   * moderador.
+   */
+  @Transient
+  public boolean esMod() {
+    return esAdmin() || Boolean.TRUE.equals(this.esModerador);
+  }
+
+  // =============================================================================================
+  // GETTERS Y SETTERS
+  // =============================================================================================
 
   public Long getId() {
     return id;
@@ -103,16 +150,39 @@ public class Usuario {
     this.esAdministrador = esAdministrador;
   }
 
-  @Transient
-  public boolean esAdmin() {
-    return this.esAdministrador != null && this.esAdministrador;
+  // =============================================================================================
+  // EQUALS, HASHCODE & TOSTRING
+  // =============================================================================================
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Usuario usuario = (Usuario) o;
+    return id != null && Objects.equals(id, usuario.id);
   }
 
-  @Transient
-  public boolean esMod() {
-    if (esAdmin()) {
-      return true;
-    }
-    return this.esModerador != null && this.esModerador;
+  @Override
+  public int hashCode() {
+    return getClass().hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return "Usuario{"
+        + "id="
+        + id
+        + ", username='"
+        + username
+        + '\''
+        + ", email='"
+        + email
+        + '\''
+        + ", roles=[Admin:"
+        + esAdministrador
+        + ", Mod:"
+        + esModerador
+        + "]"
+        + '}';
   }
 }

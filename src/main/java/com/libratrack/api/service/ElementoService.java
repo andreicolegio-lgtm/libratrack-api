@@ -33,9 +33,14 @@ public class ElementoService {
   @Autowired private PropuestaElementoService propuestaService;
 
   public Page<ElementoResponseDTO> findAllElementos(
-      Pageable pageable, String searchText, String tipoName, String generoName) {
+      Pageable pageable, String searchText, List<String> types, List<String> genres) {
+    
+    // Sanitización: Si las listas están vacías, pasamos null para desactivar el filtro en el Repo
+    List<String> typesFilter = (types != null && !types.isEmpty()) ? types : null;
+    List<String> genresFilter = (genres != null && !genres.isEmpty()) ? genres : null;
+
     Page<Elemento> paginaDeElementos =
-        elementoRepository.findElementosByFiltros(searchText, tipoName, generoName, pageable);
+        elementoRepository.findElementosByFiltros(searchText, typesFilter, genresFilter, pageable);
     return paginaDeElementos.map(ElementoResponseDTO::new);
   }
 

@@ -101,12 +101,25 @@ public class CatalogoPersonalService {
 
   @Transactional
   public void toggleFavorito(Long userId, Long elementoId) {
-    CatalogoPersonal entrada =
-        catalogoRepo
-            .findByUsuarioIdAndElementoId(userId, elementoId)
-            .orElseThrow(() -> new ResourceNotFoundException("CATALOG_ENTRY_NOT_FOUND"));
+    catalogoRepo.findByUsuarioIdAndElementoIdWithFetch(userId, elementoId).ifPresentOrElse(
+        entrada -> {
+          entrada.setEsFavorito(!entrada.getEsFavorito());
+          catalogoRepo.save(entrada);
+        },
+        () -> {
+          Usuario usuario = usuarioRepo.findById(userId).orElseThrow(() ->
+              new ResourceNotFoundException("USER_NOT_FOUND"));
+          Elemento elemento = elementoRepo.findById(elementoId).orElseThrow(() ->
+              new ResourceNotFoundException("ELEMENT_NOT_FOUND"));
 
-    entrada.setEsFavorito(!entrada.getEsFavorito());
-    catalogoRepo.save(entrada);
+          CatalogoPersonal nuevaEntrada = new CatalogoPersonal();
+          nuevaEntrada.setUsuario(usuario);
+          nuevaEntrada.setElemento(elemento);
+          nuevaEntrada.setEstadoPersonal(EstadoPersonal.PENDIENTE);
+          nuevaEntrada.setEsFavorito(true);
+
+          catalogoRepo.save(nuevaEntrada);
+        }
+    );
   }
 }

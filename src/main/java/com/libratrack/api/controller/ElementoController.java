@@ -25,14 +25,14 @@ public class ElementoController {
   @GetMapping
   public ResponseEntity<Page<ElementoResponseDTO>> getAllElementos(
       @RequestParam(value = "search", required = false) String searchText,
-      @RequestParam(value = "tipo", required = false) String tipoName,
-      @RequestParam(value = "genero", required = false) String generoName,
+      @RequestParam(value = "types", required = false) List<String> types,
+      @RequestParam(value = "genres", required = false) List<String> genres,
       @RequestParam(value = "page", defaultValue = "0") int page,
       @RequestParam(value = "size", defaultValue = "20") int size) {
 
     Pageable pageable = PageRequest.of(page, size, Sort.by("titulo").ascending());
     Page<ElementoResponseDTO> pagina =
-        elementoService.findAllElementos(pageable, searchText, tipoName, generoName);
+        elementoService.findAllElementos(pageable, searchText, types, genres);
     return ResponseEntity.ok(pagina);
   }
 

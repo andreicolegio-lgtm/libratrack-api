@@ -23,19 +23,19 @@ public interface ElementoRepository extends JpaRepository<Elemento, Long> {
               + "LEFT JOIN e.generos g_filter "
               + "WHERE "
               + "(LOWER(e.titulo) LIKE LOWER(CONCAT('%', COALESCE(:searchText, ''), '%'))) "
-              + "AND (:tipoName IS NULL OR t_filter.nombre = :tipoName) "
-              + "AND (:generoName IS NULL OR g_filter.nombre = :generoName)",
+              + "AND (:types IS NULL OR t_filter.nombre IN :types) "
+              + "AND (:genres IS NULL OR g_filter.nombre IN :genres)",
       countQuery =
           "SELECT COUNT(DISTINCT e.id) FROM Elemento e "
               + "LEFT JOIN e.tipo t_filter "
               + "LEFT JOIN e.generos g_filter "
               + "WHERE "
               + "(LOWER(e.titulo) LIKE LOWER(CONCAT('%', COALESCE(:searchText, ''), '%'))) "
-              + "AND (:tipoName IS NULL OR t_filter.nombre = :tipoName) "
-              + "AND (:generoName IS NULL OR g_filter.nombre = :generoName)")
+              + "AND (:types IS NULL OR t_filter.nombre IN :types) "
+              + "AND (:genres IS NULL OR g_filter.nombre IN :genres)")
   Page<Elemento> findElementosByFiltros(
       @Param("searchText") String searchText,
-      @Param("tipoName") String tipoName,
-      @Param("generoName") String generoName,
+      @Param("types") List<String> types,
+      @Param("genres") List<String> genres,
       Pageable pageable);
 }

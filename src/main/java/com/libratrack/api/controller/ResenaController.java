@@ -39,4 +39,37 @@ public class ResenaController {
     ResenaResponseDTO nuevaResena = resenaService.createResena(resenaDTO, currentUser.getId());
     return new ResponseEntity<>(nuevaResena, HttpStatus.CREATED);
   }
+
+  /**
+   * Actualiza una reseña existente.
+   *
+   * @param resenaId ID de la reseña a actualizar
+   * @param resenaDTO Datos nuevos de la reseña
+   * @param currentUser Usuario autenticado
+   * @return ResponseEntity con los datos actualizados
+   */
+  @PutMapping("/{resenaId}")
+  public ResponseEntity<ResenaResponseDTO> updateResena(
+      @PathVariable Long resenaId,
+      @Valid @RequestBody ResenaDTO resenaDTO,
+      @AuthenticationPrincipal CustomUserDetails currentUser) {
+    ResenaResponseDTO resenaActualizada =
+        resenaService.updateResena(resenaId, resenaDTO, currentUser.getId());
+    return ResponseEntity.ok(resenaActualizada);
+  }
+
+  /**
+   * Elimina una reseña existente.
+   *
+   * @param resenaId ID de la reseña a eliminar
+   * @param currentUser Usuario autenticado
+   * @return ResponseEntity sin contenido
+   */
+  @DeleteMapping("/{resenaId}")
+  public ResponseEntity<Void> deleteResena(
+      @PathVariable Long resenaId,
+      @AuthenticationPrincipal CustomUserDetails currentUser) {
+    resenaService.deleteResena(resenaId, currentUser);
+    return ResponseEntity.noContent().build();
+  }
 }

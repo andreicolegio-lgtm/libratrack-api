@@ -16,7 +16,6 @@ public class ElementoFormDTO {
   @Size(max = 255, message = "{validation.elemento.titulo.size}")
   private String titulo;
 
-  @NotBlank(message = "{validation.elemento.descripcion.required}")
   @Size(max = 5000, message = "{validation.elemento.descripcion.size}")
   private String descripcion;
 

@@ -47,9 +47,8 @@ public class Elemento {
    * Sinopsis o descripción detallada del contenido. Se permite una longitud mayor (hasta 5000
    * caracteres) para descripciones extensas.
    */
-  @NotBlank(message = "{validation.elemento.descripcion.required}")
   @Size(max = 5000, message = "{validation.elemento.descripcion.size}")
-  @Column(nullable = false, length = 5000)
+  @Column(nullable = true, length = 5000)
   private String descripcion;
 
   /**

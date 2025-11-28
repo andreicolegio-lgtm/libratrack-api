@@ -1,6 +1,7 @@
 package com.libratrack.api.repository;
 
 import com.libratrack.api.entity.Elemento;
+import com.libratrack.api.entity.Usuario;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,24 +37,42 @@ public interface ElementoRepository extends JpaRepository<Elemento, Long> {
    */
   @Query(
       value =
-          "SELECT DISTINCT e FROM Elemento e "
-              + "LEFT JOIN FETCH e.tipo t "
-              + "LEFT JOIN FETCH e.generos g "
+          "SELECT e FROM Elemento e "
               + "WHERE "
               + "(:searchText IS NULL OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :searchText, '%'))) "
-              + "AND (:types IS NULL OR t.nombre IN :types) "
-              + "AND (:genres IS NULL OR g.nombre IN :genres)",
+              + "AND (:types IS NULL OR e.tipo.nombre IN :types) "
+              + "AND (:genres IS NULL OR EXISTS ("
+              + "  SELECT g FROM e.generos g WHERE g.nombre IN :genres))",
       countQuery =
-          "SELECT COUNT(DISTINCT e.id) FROM Elemento e "
-              + "LEFT JOIN e.tipo t "
-              + "LEFT JOIN e.generos g "
+          "SELECT COUNT(e) FROM Elemento e "
               + "WHERE "
               + "(:searchText IS NULL OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :searchText, '%'))) "
-              + "AND (:types IS NULL OR t.nombre IN :types) "
-              + "AND (:genres IS NULL OR g.nombre IN :genres)")
+              + "AND (:types IS NULL OR e.tipo.nombre IN :types) "
+              + "AND (:genres IS NULL OR EXISTS ("
+              + "  SELECT g FROM e.generos g WHERE g.nombre IN :genres))")
   Page<Elemento> findElementosByFiltros(
       @Param("searchText") String searchText,
       @Param("types") List<String> types,
       @Param("genres") List<String> genres,
       Pageable pageable);
+
+  /**
+   * Fetches elements created by a specific user with pagination.
+   *
+   * @param creador The user who created the elements.
+   * @param pageable Pagination configuration.
+   * @return A page of elements created by the specified user.
+   */
+  Page<Elemento> findByCreador(Usuario creador, Pageable pageable);
+
+  /**
+   * Fetches elements created by a specific user and filters by title (case-insensitive).
+   *
+   * @param creador The user who created the elements.
+   * @param titulo The title to filter by.
+   * @param pageable Pagination configuration.
+   * @return A page of elements created by the specified user and matching the title.
+   */
+  Page<Elemento> findByCreadorAndTituloContainingIgnoreCase(
+      Usuario creador, String titulo, Pageable pageable);
 }

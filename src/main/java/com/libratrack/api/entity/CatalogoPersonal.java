@@ -66,6 +66,10 @@ public class CatalogoPersonal {
   @Column(nullable = false)
   private Boolean esFavorito = false;
 
+  /** Notas personales del usuario sobre el elemento. */
+  @Column(length = 2000)
+  private String notas;
+
   // =============================================================================================
   // SEGUIMIENTO DE PROGRESO
   // =============================================================================================
@@ -197,6 +201,14 @@ public class CatalogoPersonal {
 
   public void setEsFavorito(Boolean esFavorito) {
     this.esFavorito = esFavorito;
+  }
+
+  public String getNotas() {
+    return notas;
+  }
+
+  public void setNotas(String notas) {
+    this.notas = notas;
   }
 
   // =============================================================================================

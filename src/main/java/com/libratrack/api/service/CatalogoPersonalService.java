@@ -83,6 +83,9 @@ public class CatalogoPersonalService {
     if (dto.getUnidadActual() != null) entrada.setUnidadActual(dto.getUnidadActual());
     if (dto.getCapituloActual() != null) entrada.setCapituloActual(dto.getCapituloActual());
     if (dto.getPaginaActual() != null) entrada.setPaginaActual(dto.getPaginaActual());
+    if (dto.getNotas() != null) {
+      entrada.setNotas(dto.getNotas());
+    }
 
     CatalogoPersonal entradaGuardada = catalogoRepo.save(entrada);
     return new CatalogoPersonalResponseDTO(entradaGuardada);

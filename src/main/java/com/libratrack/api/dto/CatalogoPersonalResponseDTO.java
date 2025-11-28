@@ -1,9 +1,11 @@
 package com.libratrack.api.dto;
 
 import com.libratrack.api.entity.CatalogoPersonal;
+import com.libratrack.api.entity.Genero;
 import com.libratrack.api.model.EstadoPersonal;
 import com.libratrack.api.model.EstadoPublicacion;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 /**
  * DTO para enviar los datos de una entrada del catálogo personal al cliente. Incluye información
@@ -36,6 +38,10 @@ public class CatalogoPersonalResponseDTO {
 
   private Long usuarioId;
 
+  private String notas;
+  private String elementoDuracion;
+  private String elementoGeneros;
+
   public CatalogoPersonalResponseDTO(CatalogoPersonal entrada) {
     this.id = entrada.getId();
     this.estadoPersonal = entrada.getEstadoPersonal();
@@ -47,6 +53,8 @@ public class CatalogoPersonalResponseDTO {
     this.capituloActual = entrada.getCapituloActual();
     this.paginaActual = entrada.getPaginaActual();
 
+    this.notas = entrada.getNotas();
+
     if (entrada.getElemento() != null) {
       this.elementoId = entrada.getElemento().getId();
       this.elementoTitulo = entrada.getElemento().getTitulo();
@@ -57,6 +65,21 @@ public class CatalogoPersonalResponseDTO {
       this.elementoTotalUnidades = entrada.getElemento().getTotalUnidades();
       this.elementoTotalCapitulosLibro = entrada.getElemento().getTotalCapitulosLibro();
       this.elementoTotalPaginasLibro = entrada.getElemento().getTotalPaginasLibro();
+
+      String rawDuracion = entrada.getElemento().getDuracion();
+      if (rawDuracion != null && rawDuracion.length() >= 8 && rawDuracion.matches("\\d{2}:\\d{2}:\\d{2}")) {
+        // Only truncate if it matches the long time format HH:mm:ss
+        this.elementoDuracion = rawDuracion.substring(0, 5);
+      } else {
+        // If it's short (e.g., "120m", "2:30") or another format, leave it as is
+        this.elementoDuracion = rawDuracion;
+      }
+
+      this.elementoGeneros = entrada.getElemento().getGeneros() != null
+          ? entrada.getElemento().getGeneros().stream()
+              .map(Genero::getNombre)
+              .collect(Collectors.joining(", "))
+          : null;
 
       if (entrada.getElemento().getTipo() != null) {
         this.elementoTipoNombre = entrada.getElemento().getTipo().getNombre();
@@ -139,5 +162,29 @@ public class CatalogoPersonalResponseDTO {
 
   public Long getUsuarioId() {
     return usuarioId;
+  }
+
+  public String getNotas() {
+    return notas;
+  }
+
+  public void setNotas(String notas) {
+    this.notas = notas;
+  }
+
+  public String getElementoDuracion() {
+    return elementoDuracion;
+  }
+
+  public void setElementoDuracion(String elementoDuracion) {
+    this.elementoDuracion = elementoDuracion;
+  }
+
+  public String getElementoGeneros() {
+    return elementoGeneros;
+  }
+
+  public void setElementoGeneros(String elementoGeneros) {
+    this.elementoGeneros = elementoGeneros;
   }
 }

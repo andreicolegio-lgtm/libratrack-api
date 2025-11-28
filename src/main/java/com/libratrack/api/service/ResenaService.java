@@ -10,6 +10,8 @@ import com.libratrack.api.exception.ResourceNotFoundException;
 import com.libratrack.api.repository.ElementoRepository;
 import com.libratrack.api.repository.ResenaRepository;
 import com.libratrack.api.repository.UsuarioRepository;
+import com.libratrack.api.security.CustomUserDetails;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,5 +75,60 @@ public class ResenaService {
     Resena resenaGuardada = resenaRepo.save(nuevaResena);
 
     return new ResenaResponseDTO(resenaGuardada);
+  }
+
+  /**
+   * Actualiza una reseña existente.
+   *
+   * @param resenaId ID de la reseña a actualizar
+   * @param dto Datos nuevos de la reseña
+   * @param userId ID del usuario que realiza la acción
+   * @return ResenaResponseDTO con los datos actualizados
+   */
+  @Transactional
+  public ResenaResponseDTO updateResena(Long resenaId, ResenaDTO dto, Long userId) {
+    Resena resena =
+        resenaRepo
+            .findById(resenaId)
+            .orElseThrow(() -> new ResourceNotFoundException("{exception.resena.not_found}"));
+
+    // Validar que el usuario sea el dueño de la reseña
+    if (!resena.getUsuario().getId().equals(userId)) {
+      throw new SecurityException("{exception.resena.access_denied}");
+    }
+
+    // Actualizar campos
+    resena.setValoracion(dto.getValoracion());
+    resena.setTextoResena(dto.getTextoResena());
+
+    Resena resenaActualizada = resenaRepo.save(resena);
+
+    return new ResenaResponseDTO(resenaActualizada);
+  }
+
+  /**
+   * Elimina una reseña existente.
+   *
+   * @param resenaId ID de la reseña a eliminar
+   * @param userDetails Detalles del usuario que realiza la acción
+   */
+  @Transactional
+  public void deleteResena(Long resenaId, CustomUserDetails userDetails) {
+    Resena resena =
+        resenaRepo
+            .findById(resenaId)
+            .orElseThrow(() -> new ResourceNotFoundException("{exception.resena.not_found}"));
+
+    // Validar permisos
+    boolean isOwner = resena.getUsuario().getId().equals(userDetails.getId());
+    boolean isAdminOrModerator =
+        userDetails.getAuthorities().stream()
+            .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN") || auth.getAuthority().equals("ROLE_MODERATOR"));
+
+    if (!isOwner && !isAdminOrModerator) {
+      throw new SecurityException("{exception.resena.access_denied}");
+    }
+
+    resenaRepo.delete(resena);
   }
 }

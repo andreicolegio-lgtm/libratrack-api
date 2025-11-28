@@ -93,7 +93,7 @@ public class ElementoService {
 
     nuevoElemento.setCreador(admin);
     nuevoElemento.setEstadoContenido(EstadoContenido.OFICIAL);
-    nuevoElemento.setEstadoPublicacion(EstadoPublicacion.DISPONIBLE);
+    nuevoElemento.setEstadoPublicacion(EstadoPublicacion.AVAILABLE);
 
     Elemento elementoGuardado = elementoRepository.save(nuevoElemento);
     return new ElementoResponseDTO(elementoGuardado);

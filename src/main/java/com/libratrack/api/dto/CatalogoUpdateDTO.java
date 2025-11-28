@@ -23,6 +23,8 @@ public class CatalogoUpdateDTO {
   @Min(value = 0, message = "{validation.catalogo.pagina.min}")
   private Integer paginaActual;
 
+  private String notas;
+
   // Getters y Setters
   public EstadoPersonal getEstadoPersonal() {
     return estadoPersonal;
@@ -62,5 +64,13 @@ public class CatalogoUpdateDTO {
 
   public void setPaginaActual(Integer paginaActual) {
     this.paginaActual = paginaActual;
+  }
+
+  public String getNotas() {
+    return notas;
+  }
+
+  public void setNotas(String notas) {
+    this.notas = notas;
   }
 }

@@ -98,7 +98,7 @@ public class PropuestaElementoService {
     nuevoElemento.setTipo(tipoFinal);
     nuevoElemento.setGeneros(generosFinales);
     nuevoElemento.setEstadoContenido(EstadoContenido.COMUNITARIO);
-    nuevoElemento.setEstadoPublicacion(EstadoPublicacion.DISPONIBLE);
+    nuevoElemento.setEstadoPublicacion(EstadoPublicacion.AVAILABLE);
     nuevoElemento.setUrlImagen(propuesta.getUrlImagen());
 
     nuevoElemento.setEpisodiosPorTemporada(propuesta.getEpisodiosPorTemporada());

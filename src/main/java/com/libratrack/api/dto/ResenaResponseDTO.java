@@ -14,6 +14,7 @@ public class ResenaResponseDTO {
   private Long elementoId;
   private String usernameAutor;
   private String autorFotoPerfilUrl;
+  private Long usuarioId; // Nuevo campo agregado
 
   public ResenaResponseDTO(Resena resena) {
     this.id = resena.getId();
@@ -28,6 +29,7 @@ public class ResenaResponseDTO {
     if (resena.getUsuario() != null) {
       this.usernameAutor = resena.getUsuario().getUsername();
       this.autorFotoPerfilUrl = resena.getUsuario().getFotoPerfilUrl();
+      this.usuarioId = resena.getUsuario().getId(); // Asignar usuarioId
     } else {
       this.usernameAutor = "Usuario Eliminado";
     }
@@ -60,5 +62,9 @@ public class ResenaResponseDTO {
 
   public String getAutorFotoPerfilUrl() {
     return autorFotoPerfilUrl;
+  }
+
+  public Long getUsuarioId() {
+    return usuarioId;
   }
 }

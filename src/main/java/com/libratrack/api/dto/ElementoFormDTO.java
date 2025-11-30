@@ -1,5 +1,7 @@
 package com.libratrack.api.dto;
 
+import com.libratrack.api.model.EstadoContenido;
+import com.libratrack.api.model.EstadoPublicacion;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -44,6 +46,10 @@ public class ElementoFormDTO {
 
   @Size(max = 255)
   private String duracion;
+
+  private EstadoPublicacion estadoPublicacion;
+
+  private EstadoContenido estadoContenido;
 
   // Getters y Setters
   public String getTitulo() {
@@ -132,5 +138,21 @@ public class ElementoFormDTO {
 
   public void setDuracion(String duracion) {
     this.duracion = duracion;
+  }
+
+  public EstadoPublicacion getEstadoPublicacion() {
+    return estadoPublicacion;
+  }
+
+  public void setEstadoPublicacion(EstadoPublicacion estadoPublicacion) {
+    this.estadoPublicacion = estadoPublicacion;
+  }
+
+  public EstadoContenido getEstadoContenido() {
+    return estadoContenido;
+  }
+
+  public void setEstadoContenido(EstadoContenido estadoContenido) {
+    this.estadoContenido = estadoContenido;
   }
 }

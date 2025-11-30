@@ -146,23 +146,41 @@ public class ElementoService {
   }
 
   private void mapDtoToEntity(ElementoFormDTO dto, Elemento elemento) {
-    // Lógica de traducción delegada al servicio de propuestas para reutilización
+    // Mapeo básico (Existente)
     Tipo tipo = propuestaService.traducirTipo(dto.getTipoNombre());
     Set<Genero> generos = propuestaService.traducirGeneros(dto.getGenerosNombres(), tipo);
-
     elemento.setTitulo(dto.getTitulo());
     elemento.setDescripcion(dto.getDescripcion());
     elemento.setUrlImagen(dto.getUrlImagen());
     elemento.setTipo(tipo);
     elemento.setGeneros(generos);
 
-    // Detalles técnicos
+    // Detalles técnicos (Existente)
     elemento.setEpisodiosPorTemporada(dto.getEpisodiosPorTemporada());
     elemento.setTotalUnidades(dto.getTotalUnidades());
     elemento.setTotalCapitulosLibro(dto.getTotalCapitulosLibro());
     elemento.setTotalPaginasLibro(dto.getTotalPaginasLibro());
     elemento.setDuracion(dto.getDuracion());
 
-    // Nota: La gestión de secuelas/precuelas se podría añadir aquí si el DTO trae IDs
+    // Estado de Publicación
+    // Si viene nulo, mantenemos el que tenía o ponemos uno por defecto
+    if (dto.getEstadoPublicacion() != null) {
+        elemento.setEstadoPublicacion(dto.getEstadoPublicacion());
+    } else if (elemento.getEstadoPublicacion() == null) {
+        elemento.setEstadoPublicacion(EstadoPublicacion.AVAILABLE); // Valor por defecto
+    }
+
+    // Secuelas / Cronología
+    if (dto.getSecuelaIds() != null && !dto.getSecuelaIds().isEmpty()) {
+        Set<Elemento> nuevasSecuelas = dto.getSecuelaIds().stream()
+            .map(id -> elementoRepository.findById(id).orElse(null))
+            .filter(java.util.Objects::nonNull)
+            .collect(java.util.stream.Collectors.toSet());
+
+        elemento.setSecuelas(nuevasSecuelas);
+    } else if (dto.getSecuelaIds() != null) {
+        // Si envían una lista vacía explícitamente, limpiamos las relaciones
+        elemento.getSecuelas().clear();
+    }
   }
 }

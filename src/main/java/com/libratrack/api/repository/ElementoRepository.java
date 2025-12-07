@@ -5,6 +5,7 @@ import com.libratrack.api.entity.Usuario;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -75,4 +76,82 @@ public interface ElementoRepository extends JpaRepository<Elemento, Long> {
    */
   Page<Elemento> findByCreadorAndTituloContainingIgnoreCase(
       Usuario creador, String titulo, Pageable pageable);
+
+  /**
+   * Fetches elements based on dynamic filters and pagination.
+   *
+   * @param spec Specification for dynamic filtering.
+   * @param pageable Pagination configuration.
+   * @return A page of elements matching the specification.
+   */
+  Page<Elemento> findAll(Specification<Elemento> spec, Pageable pageable);
+
+  /**
+   * Fetches elements created by a specific user with advanced filtering.
+   *
+   * @param creadorId The ID of the user who created the elements.
+   * @param search Optional search term to filter by title.
+   * @param types Optional list of types to filter by.
+   * @param genres Optional list of genres to filter by.
+   * @param pageable Pagination configuration.
+   * @return A page of elements matching the criteria.
+   */
+  @Query(
+      "SELECT e FROM Elemento e WHERE e.creador.id = :creadorId "
+          + "AND (:search IS NULL OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :search, '%'))) "
+          + "AND (:types IS NULL OR e.tipo.nombre IN :types) "
+          + "AND (:genres IS NULL OR EXISTS (SELECT g FROM e.generos g WHERE g.nombre IN :genres))")
+  Page<Elemento> findByCreadorAndFiltros(
+      @Param("creadorId") Long creadorId,
+      @Param("search") String search,
+      @Param("types") List<String> types,
+      @Param("genres") List<String> genres,
+      Pageable pageable);
+
+  /**
+   * Fetches history elements based on user role and filters.
+   *
+   * @param userId The ID of the user making the request.
+   * @param isAdmin Whether the user is an admin.
+   * @param search Optional search term to filter by title.
+   * @param types Optional list of types to filter by.
+   * @param genres Optional list of genres to filter by.
+   * @param pageable Pagination configuration.
+   * @return A page of elements matching the criteria.
+   */
+  @Query(
+      "SELECT e FROM Elemento e JOIN e.creador u WHERE "
+          + "((:isAdmin = true AND (u.esModerador = true OR u.esAdministrador = true)) OR u.id = :userId) "
+          + "AND (:search IS NULL OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :search, '%'))) "
+          + "AND (:types IS NULL OR e.tipo.nombre IN :types) "
+          + "AND (:genres IS NULL OR EXISTS (SELECT g FROM e.generos g WHERE g.nombre IN :genres)) "
+          + "AND (e.creadoDesdePropuesta = false OR e.creadoDesdePropuesta IS NULL)")
+  Page<Elemento> findHistoryByFilters(
+      @Param("userId") Long userId,
+      @Param("isAdmin") boolean isAdmin,
+      @Param("search") String search,
+      @Param("types") List<String> types,
+      @Param("genres") List<String> genres,
+      Pageable pageable);
+
+  /**
+   * Searches for public elements with sorting, filtering, and eager loading to avoid null data issues.
+   *
+   * @param search The search term for the element title.
+   * @param types The types to filter by.
+   * @param genres The genres to filter by.
+   * @param pageable Pagination configuration.
+   * @return A page of elements matching the search criteria.
+   */
+  @Query("SELECT e FROM Elemento e " +
+         "LEFT JOIN FETCH e.tipo " +      // <--- CLAVE PARA EVITAR 'TIPO DESCONOCIDO'
+         "LEFT JOIN FETCH e.generos " +   // <--- CLAVE PARA EVITAR 'GENEROS VACIOS'
+         "WHERE (:search IS NULL OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+         "AND (:types IS NULL OR e.tipo.nombre IN :types) " +
+         "AND (:genres IS NULL OR EXISTS (SELECT g FROM e.generos g WHERE g.nombre IN :genres))")
+  Page<Elemento> searchPublicElementos(
+      @Param("search") String search,
+      @Param("types") List<String> types,
+      @Param("genres") List<String> genres,
+      Pageable pageable);
 }

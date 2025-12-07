@@ -11,7 +11,6 @@ public class PropuestaRequestDTO {
   @Size(max = 255, message = "{validation.propuesta.titulo.size}")
   private String tituloSugerido;
 
-  @NotBlank(message = "{validation.propuesta.descripcion.required}")
   @Size(max = 5000, message = "{validation.propuesta.descripcion.size}")
   private String descripcionSugerida;
 

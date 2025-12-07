@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -35,17 +34,24 @@ public class ElementoController {
    * @return Página de resultados DTO.
    */
   @PreAuthorize("hasAuthority('ROLE_USER')")
-  @GetMapping
+  @GetMapping("/public/search")
   public ResponseEntity<Page<ElementoResponseDTO>> getAllElementos(
       @RequestParam(value = "search", required = false) String searchText,
       @RequestParam(value = "types", required = false) List<String> types,
       @RequestParam(value = "genres", required = false) List<String> genres,
       @RequestParam(value = "page", defaultValue = "0") int page,
-      @RequestParam(value = "size", defaultValue = "20") int size) {
+      @RequestParam(value = "size", defaultValue = "20") int size,
+      // Nuevos parámetros para ordenamiento
+      @RequestParam(value = "sort", defaultValue = "DATE") String sortMode,
+      @RequestParam(value = "asc", defaultValue = "false") boolean isAscending) {
 
-    Pageable pageable = PageRequest.of(page, size, Sort.by("titulo").ascending());
+    // Construimos el Pageable básico (el servicio se encarga del Sort complejo)
+    Pageable pageable = PageRequest.of(page, size);
+    
+    // CAMBIO CLAVE: Llamamos a searchElementos (el método nuevo) en vez de findAllElementos
     Page<ElementoResponseDTO> pagina =
-        elementoService.findAllElementos(pageable, searchText, types, genres);
+        elementoService.searchElementos(pageable, searchText, types, genres, sortMode, isAscending);
+        
     return ResponseEntity.ok(pagina);
   }
 

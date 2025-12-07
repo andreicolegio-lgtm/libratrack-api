@@ -49,7 +49,7 @@ public class UsuarioController {
     return usuarioService.changePasswordById(currentUser.getId(), passwordDto);
   }
 
-  /** Actualiza la URL de la foto de perfil. */
+  /** Actualiza o elimina la URL de la foto de perfil. */
   @PutMapping("/me/foto")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<UsuarioResponseDTO> updateFotoPerfil(
@@ -57,9 +57,6 @@ public class UsuarioController {
       @RequestBody Map<String, String> body) {
 
     String fotoUrl = body.get("url");
-    if (fotoUrl == null || fotoUrl.isBlank()) {
-      return ResponseEntity.badRequest().build();
-    }
 
     UsuarioResponseDTO perfilActualizado =
         usuarioService.updateFotoPerfilById(currentUser.getId(), fotoUrl);

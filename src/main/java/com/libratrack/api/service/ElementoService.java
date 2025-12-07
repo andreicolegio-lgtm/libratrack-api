@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -94,6 +95,7 @@ public class ElementoService {
     nuevoElemento.setCreador(admin);
     nuevoElemento.setEstadoContenido(EstadoContenido.OFICIAL);
     nuevoElemento.setEstadoPublicacion(EstadoPublicacion.AVAILABLE);
+    nuevoElemento.setCreadoDesdePropuesta(false); // Aseguramos que no venga de propuesta
 
     Elemento elementoGuardado = elementoRepository.save(nuevoElemento);
     return new ElementoResponseDTO(elementoGuardado);
@@ -182,5 +184,41 @@ public class ElementoService {
         // Si envían una lista vacía explícitamente, limpiamos las relaciones
         elemento.getSecuelas().clear();
     }
+  }
+
+  @Transactional(readOnly = true)
+  public Page<ElementoResponseDTO> searchElementos(
+      Pageable pageable,
+      String searchText,
+      List<String> types,
+      List<String> genres,
+      String sortMode,
+      boolean isAscending) {
+
+    // 1. TRADUCCIÓN DE ORDENAMIENTO
+    String sortColumn = "titulo"; // Por defecto ALPHA
+    if ("DATE".equalsIgnoreCase(sortMode)) {
+        sortColumn = "id"; // O "id" si prefieres orden de creación
+    }
+
+    // 2. Construcción del Sort con la columna real
+    Sort sort = Sort.by(isAscending ? Sort.Direction.ASC : Sort.Direction.DESC, sortColumn);
+    
+    // 3. Crear PageRequest
+    Pageable sortedPageable = PageRequest.of(
+        pageable.getPageNumber(), 
+        pageable.getPageSize(), 
+        sort
+    );
+
+    // Normalización de filtros
+    List<String> typesFilter = (types != null && !types.isEmpty()) ? types : null;
+    List<String> genresFilter = (genres != null && !genres.isEmpty()) ? genres : null;
+
+    // Llamada al repositorio (Asegúrate de haber aplicado el paso 3 abajo)
+    Page<Elemento> paginaDeElementos =
+        elementoRepository.searchPublicElementos(searchText, typesFilter, genresFilter, sortedPageable);
+
+    return paginaDeElementos.map(ElementoResponseDTO::new);
   }
 }

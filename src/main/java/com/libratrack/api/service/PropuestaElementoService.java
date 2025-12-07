@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,8 +63,24 @@ public class PropuestaElementoService {
   }
 
   @Transactional(readOnly = true)
-  public List<PropuestaResponseDTO> getPropuestasPorEstado(EstadoPropuesta estado) {
-    return propuestaRepo.findByEstadoPropuesta(estado).stream()
+  public List<PropuestaResponseDTO> getPropuestasPorEstado(
+      EstadoPropuesta estado, String search, List<String> types, List<String> genres,
+      String sortMode, boolean isAscending) {
+
+    // Construir el objeto Sort basado en sortMode y isAscending
+    Sort sort;
+    if ("ALPHA".equalsIgnoreCase(sortMode)) {
+      sort = isAscending ? Sort.by("tituloSugerido").ascending() : Sort.by("tituloSugerido").descending();
+    } else { // Default to "DATE"
+      sort = isAscending ? Sort.by("fechaPropuesta").ascending() : Sort.by("fechaPropuesta").descending();
+    }
+
+    // Convert genres list to a single comma-separated string
+    String genresString = genres != null && !genres.isEmpty() ? String.join(",", genres) : null;
+
+    // Llamar al repositorio con Pageable
+    Pageable pageable = PageRequest.of(0, 20, sort); // Ejemplo: página 0, tamaño 20
+    return propuestaRepo.searchPropuestas(estado, search, types, genresString, pageable).stream()
         .map(PropuestaResponseDTO::new)
         .collect(Collectors.toList());
   }
@@ -106,14 +125,40 @@ public class PropuestaElementoService {
     nuevoElemento.setTotalCapitulosLibro(propuesta.getTotalCapitulosLibro());
     nuevoElemento.setTotalPaginasLibro(propuesta.getTotalPaginasLibro());
     nuevoElemento.setDuracion(propuesta.getDuracion());
+    nuevoElemento.setCreadoDesdePropuesta(true); // Marcar como creado desde propuesta
 
     // Marcar propuesta como APROBADA
     propuesta.setEstadoPropuesta(EstadoPropuesta.APROBADO);
     propuesta.setRevisor(revisor);
+    // Save the review comments in the proposal
+    propuesta.setComentariosRevision(dto.getComentariosRevision());
+
+    // Use the state from the DTO or default to OFICIAL
+    nuevoElemento.setEstadoContenido(
+        dto.getEstadoContenido() != null ? dto.getEstadoContenido() : EstadoContenido.OFICIAL);
+
+    // Use the publication state from the DTO or default to AVAILABLE
+    nuevoElemento.setEstadoPublicacion(
+        dto.getEstadoPublicacion() != null ? dto.getEstadoPublicacion() : EstadoPublicacion.AVAILABLE);
+
     propuestaRepo.save(propuesta);
 
     Elemento elementoGuardado = elementoRepo.save(nuevoElemento);
+    propuesta.setElementoCreado(elementoGuardado); // Vincular el elemento creado con la propuesta
+    propuestaRepo.save(propuesta);
     return new ElementoResponseDTO(elementoGuardado);
+  }
+
+  @Transactional
+  public void rechazarPropuesta(Long propuestaId, Long revisorId, String motivo) {
+    PropuestaElemento propuesta = propuestaRepo.findById(propuestaId)
+        .orElseThrow(() -> new ResourceNotFoundException("{exception.propuesta.not_found}"));
+    Usuario revisor = usuarioRepo.findById(revisorId)
+        .orElseThrow(() -> new ResourceNotFoundException("{exception.user.not_found}"));
+    propuesta.setEstadoPropuesta(EstadoPropuesta.RECHAZADO);
+    propuesta.setRevisor(revisor);
+    propuesta.setComentariosRevision(motivo);
+    propuestaRepo.save(propuesta);
   }
 
   // --- Métodos Auxiliares ---

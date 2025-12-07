@@ -295,6 +295,20 @@ public class Elemento {
     this.duracion = duracion;
   }
 
+  /**
+   * Indica si el elemento fue creado a partir de una propuesta aprobada.
+   */
+  @Column(nullable = false)
+  private Boolean creadoDesdePropuesta = false;
+
+  public Boolean getCreadoDesdePropuesta() {
+    return creadoDesdePropuesta;
+  }
+
+  public void setCreadoDesdePropuesta(Boolean creadoDesdePropuesta) {
+    this.creadoDesdePropuesta = creadoDesdePropuesta;
+  }
+
   // =============================================================================================
   // EQUALS, HASHCODE & TOSTRING
   // =============================================================================================

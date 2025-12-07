@@ -2,11 +2,9 @@ package com.libratrack.api.controller;
 
 import com.libratrack.api.dto.ElementoFormDTO;
 import com.libratrack.api.dto.ElementoResponseDTO;
-import com.libratrack.api.dto.PaginatedResponse;
 import com.libratrack.api.dto.RolUpdateDTO;
 import com.libratrack.api.dto.UsuarioResponseDTO;
 import com.libratrack.api.security.CustomUserDetails;
-import com.libratrack.api.service.AdminService;
 import com.libratrack.api.service.ElementoService;
 import com.libratrack.api.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -32,8 +30,6 @@ public class AdminController {
 
   @Autowired private UsuarioService usuarioService;
   @Autowired private ElementoService elementoService;
-  @Autowired private AdminService adminService;
-
   /** Lista todos los usuarios registrados con paginación y filtros opcionales. */
   @GetMapping("/usuarios")
   public ResponseEntity<Page<UsuarioResponseDTO>> getAllUsuarios(
@@ -90,23 +86,5 @@ public class AdminController {
   public ResponseEntity<ElementoResponseDTO> comunitarizarElemento(@PathVariable Long id) {
     ElementoResponseDTO elementoActualizado = elementoService.comunitarizarElemento(id);
     return ResponseEntity.ok(elementoActualizado);
-  }
-
-  /**
-   * Fetches elements created by the authenticated admin.
-   *
-   * @param page The page number (default is 0).
-   * @param size The page size (default is 10).
-   * @param search Optional search term to filter by title.
-   * @return A paginated response of elements created by the admin.
-   */
-  @GetMapping("/mis-elementos")
-  public ResponseEntity<PaginatedResponse<ElementoResponseDTO>> getMisElementosCreados(
-      @RequestParam(value = "page", defaultValue = "0") int page,
-      @RequestParam(value = "size", defaultValue = "10") int size,
-      @RequestParam(value = "search", required = false) String search) {
-
-    PaginatedResponse<ElementoResponseDTO> response = adminService.getMisElementosCreados(page, size, search);
-    return ResponseEntity.ok(response);
   }
 }

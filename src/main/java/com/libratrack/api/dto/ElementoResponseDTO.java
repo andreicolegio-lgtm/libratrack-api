@@ -24,6 +24,8 @@ public class ElementoResponseDTO {
   private String tipoNombre;
   private EstadoContenido estadoContenido;
   private String creadorUsername;
+  private String autorNombre;
+  private String autorEmail;
   private Set<String> generos;
 
   private EstadoPublicacion estadoPublicacion;
@@ -60,8 +62,12 @@ public class ElementoResponseDTO {
     // Inicialización segura de Creador
     if (Hibernate.isInitialized(elemento.getCreador()) && elemento.getCreador() != null) {
       this.creadorUsername = elemento.getCreador().getUsername();
+      this.autorNombre = elemento.getCreador().getUsername();
+      this.autorEmail = elemento.getCreador().getEmail();
     } else {
       this.creadorUsername = "OFICIAL"; // Valor por defecto si no hay creador visible o es null
+      this.autorNombre = "LibraTrack"; // O "Desconocido"
+      this.autorEmail = null;
     }
 
     // Inicialización segura de Géneros
@@ -154,6 +160,22 @@ public class ElementoResponseDTO {
 
   public void setCreadorUsername(String creadorUsername) {
     this.creadorUsername = creadorUsername;
+  }
+
+  public String getAutorNombre() {
+    return autorNombre;
+  }
+
+  public void setAutorNombre(String autorNombre) {
+    this.autorNombre = autorNombre;
+  }
+
+  public String getAutorEmail() {
+    return autorEmail;
+  }
+
+  public void setAutorEmail(String autorEmail) {
+    this.autorEmail = autorEmail;
   }
 
   public Set<String> getGeneros() {

@@ -27,6 +27,11 @@ public class PropuestaResponseDTO {
   private String revisorUsername;
   private String duracion;
 
+  private String proponenteEmail;
+  private String revisorEmail;
+
+  private Long elementoCreadoId; // ID del elemento creado a partir de la propuesta
+
   public PropuestaResponseDTO(PropuestaElemento p) {
     this.id = p.getId();
     this.tituloSugerido = p.getTituloSugerido();
@@ -45,14 +50,22 @@ public class PropuestaResponseDTO {
 
     if (p.getProponente() != null) {
       this.proponenteUsername = p.getProponente().getUsername();
+      this.proponenteEmail = p.getProponente().getEmail();
     } else {
       this.proponenteUsername = "Desconocido";
+      this.proponenteEmail = null;
     }
 
     if (p.getRevisor() != null) {
       this.revisorUsername = p.getRevisor().getUsername();
+      this.revisorEmail = p.getRevisor().getEmail();
     } else {
       this.revisorUsername = null;
+      this.revisorEmail = null;
+    }
+
+    if (p.getElementoCreado() != null) {
+      this.elementoCreadoId = p.getElementoCreado().getId();
     }
   }
 
@@ -115,5 +128,25 @@ public class PropuestaResponseDTO {
 
   public String getDuracion() {
     return duracion;
+  }
+
+  public String getProponenteEmail() {
+    return proponenteEmail;
+  }
+
+  public void setProponenteEmail(String proponenteEmail) {
+    this.proponenteEmail = proponenteEmail;
+  }
+
+  public String getRevisorEmail() {
+    return revisorEmail;
+  }
+
+  public void setRevisorEmail(String revisorEmail) {
+    this.revisorEmail = revisorEmail;
+  }
+
+  public Long getElementoCreadoId() {
+    return elementoCreadoId;
   }
 }

@@ -1,5 +1,7 @@
 package com.libratrack.api.dto;
 
+import com.libratrack.api.model.EstadoContenido;
+import com.libratrack.api.model.EstadoPublicacion;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,9 +15,8 @@ public class PropuestaUpdateDTO {
   @Size(max = 255, message = "{validation.propuesta.titulo.size}")
   private String tituloSugerido;
 
-  @NotBlank(message = "{validation.propuesta.descripcion.required}")
   @Size(max = 5000, message = "{validation.propuesta.descripcion.size}")
-  private String descripcionSugerida;
+  private String descripcionSugerida; // Descripción ahora es opcional
 
   @NotBlank(message = "{validation.propuesta.tipo.required}")
   private String tipoSugerido;
@@ -39,6 +40,12 @@ public class PropuestaUpdateDTO {
   private Integer totalPaginasLibro;
 
   private String duracion;
+
+  @Size(max = 500, message = "{validation.propuesta.comentarios.size}")
+  private String comentariosRevision;
+
+  private EstadoContenido estadoContenido; // OFICIAL o COMUNITARIO
+  private EstadoPublicacion estadoPublicacion; // RELEASING, etc.
 
   // Getters y Setters
   public String getTituloSugerido() {
@@ -119,5 +126,29 @@ public class PropuestaUpdateDTO {
 
   public void setDuracion(String duracion) {
     this.duracion = duracion;
+  }
+
+  public String getComentariosRevision() {
+    return comentariosRevision;
+  }
+
+  public void setComentariosRevision(String comentariosRevision) {
+    this.comentariosRevision = comentariosRevision;
+  }
+
+  public EstadoContenido getEstadoContenido() {
+    return estadoContenido;
+  }
+
+  public void setEstadoContenido(EstadoContenido estadoContenido) {
+    this.estadoContenido = estadoContenido;
+  }
+
+  public EstadoPublicacion getEstadoPublicacion() {
+    return estadoPublicacion;
+  }
+
+  public void setEstadoPublicacion(EstadoPublicacion estadoPublicacion) {
+    this.estadoPublicacion = estadoPublicacion;
   }
 }

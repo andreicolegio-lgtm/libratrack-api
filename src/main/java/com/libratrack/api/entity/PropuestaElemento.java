@@ -54,9 +54,8 @@ public class PropuestaElemento {
   private String tituloSugerido;
 
   /** Descripción o sinopsis sugerida. */
-  @NotBlank(message = "{validation.propuesta.descripcion.required}")
   @Lob
-  @Column(columnDefinition = "TEXT")
+  @Column(columnDefinition = "TEXT", nullable = true)
   private String descripcionSugerida;
 
   /**
@@ -112,6 +111,17 @@ public class PropuestaElemento {
 
   @Column(nullable = false, updatable = false)
   private LocalDateTime fechaPropuesta;
+
+  // =============================================================================================
+  // RELACIÓN CON ELEMENTO CREADO
+  // =============================================================================================
+
+  /**
+   * Elemento creado a partir de esta propuesta (si fue aprobada).
+   */
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "elemento_creado_id")
+  private Elemento elementoCreado;
 
   // =============================================================================================
   // CONSTRUCTORES Y EVENTOS
@@ -257,6 +267,14 @@ public class PropuestaElemento {
 
   public void setDuracion(String duracion) {
     this.duracion = duracion;
+  }
+
+  public Elemento getElementoCreado() {
+    return elementoCreado;
+  }
+
+  public void setElementoCreado(Elemento elementoCreado) {
+    this.elementoCreado = elementoCreado;
   }
 
   // =============================================================================================

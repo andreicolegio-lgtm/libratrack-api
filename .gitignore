@@ -32,6 +32,16 @@ build/
 ### VS Code ###
 .vscode/
 
-# --- ¡LÍNEA AÑADIDA! ---
-# Ignorar credenciales de Google Cloud
+### Ignorar credenciales de Google Cloud ###
 gcs-credentials.json
+
+### Logs y Archivos Temporales ###
+logs/
+log/
+*.log
+
+### Seguridad Extra ###
+.env
+*.json
+!package.json
+!manifest.json

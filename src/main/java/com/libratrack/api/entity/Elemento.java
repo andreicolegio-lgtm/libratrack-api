@@ -295,9 +295,7 @@ public class Elemento {
     this.duracion = duracion;
   }
 
-  /**
-   * Indica si el elemento fue creado a partir de una propuesta aprobada.
-   */
+  /** Indica si el elemento fue creado a partir de una propuesta aprobada. */
   @Column(nullable = false)
   private Boolean creadoDesdePropuesta = false;
 

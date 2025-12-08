@@ -65,8 +65,8 @@ public class ElementoResponseDTO {
       this.autorNombre = elemento.getCreador().getUsername();
       this.autorEmail = elemento.getCreador().getEmail();
     } else {
-      this.creadorUsername = "OFICIAL"; // Valor por defecto si no hay creador visible o es null
-      this.autorNombre = "LibraTrack"; // O "Desconocido"
+      this.creadorUsername = null;
+      this.autorNombre = null;
       this.autorEmail = null;
     }
 

@@ -7,19 +7,18 @@ import com.libratrack.api.entity.Usuario;
 import com.libratrack.api.repository.ElementoRepository;
 import com.libratrack.api.repository.UsuarioRepository;
 import com.libratrack.api.security.CustomUserDetails;
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import jakarta.persistence.criteria.Predicate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class AdminService {
@@ -55,28 +54,31 @@ public class AdminService {
             .findById(adminId)
             .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + adminId));
 
-    PageRequest pageable = PageRequest.of(page, size, Sort.by(isAscending ? Sort.Direction.ASC : Sort.Direction.DESC, sortMode));
+    PageRequest pageable =
+        PageRequest.of(
+            page, size, Sort.by(isAscending ? Sort.Direction.ASC : Sort.Direction.DESC, sortMode));
 
-    Specification<Elemento> spec = (root, query, criteriaBuilder) -> {
-      var predicates = new ArrayList<>();
-      predicates.add(criteriaBuilder.equal(root.get("creador"), admin));
+    Specification<Elemento> spec =
+        (root, query, criteriaBuilder) -> {
+          var predicates = new ArrayList<>();
+          predicates.add(criteriaBuilder.equal(root.get("creador"), admin));
 
-      if (search != null && !search.isEmpty()) {
-        predicates.add(
-            criteriaBuilder.like(
-                criteriaBuilder.lower(root.get("titulo")), "%" + search.toLowerCase() + "%"));
-      }
+          if (search != null && !search.isEmpty()) {
+            predicates.add(
+                criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("titulo")), "%" + search.toLowerCase() + "%"));
+          }
 
-      if (types != null && !types.isEmpty()) {
-        predicates.add(root.get("tipo").in(types));
-      }
+          if (types != null && !types.isEmpty()) {
+            predicates.add(root.get("tipo").in(types));
+          }
 
-      if (genres != null && !genres.isEmpty()) {
-        predicates.add(root.join("generos").in(genres));
-      }
+          if (genres != null && !genres.isEmpty()) {
+            predicates.add(root.join("generos").in(genres));
+          }
 
-      return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-    };
+          return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
 
     Page<Elemento> elementos = elementoRepository.findAll(spec, pageable);
 
@@ -126,9 +128,9 @@ public class AdminService {
     PageRequest pageable = PageRequest.of(page, size, sort);
 
     // Determine if the user is an admin
-    boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities()
-        .stream()
-        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    boolean isAdmin =
+        SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
     // Fetch history elements based on user role and filters
     Page<Elemento> elementos =

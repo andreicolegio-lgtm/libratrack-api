@@ -52,7 +52,7 @@ public class PropuestaResponseDTO {
       this.proponenteUsername = p.getProponente().getUsername();
       this.proponenteEmail = p.getProponente().getEmail();
     } else {
-      this.proponenteUsername = "Desconocido";
+      this.proponenteUsername = null;
       this.proponenteEmail = null;
     }
 

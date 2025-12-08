@@ -64,15 +64,25 @@ public class PropuestaElementoService {
 
   @Transactional(readOnly = true)
   public List<PropuestaResponseDTO> getPropuestasPorEstado(
-      EstadoPropuesta estado, String search, List<String> types, List<String> genres,
-      String sortMode, boolean isAscending) {
+      EstadoPropuesta estado,
+      String search,
+      List<String> types,
+      List<String> genres,
+      String sortMode,
+      boolean isAscending) {
 
     // Construir el objeto Sort basado en sortMode y isAscending
     Sort sort;
     if ("ALPHA".equalsIgnoreCase(sortMode)) {
-      sort = isAscending ? Sort.by("tituloSugerido").ascending() : Sort.by("tituloSugerido").descending();
+      sort =
+          isAscending
+              ? Sort.by("tituloSugerido").ascending()
+              : Sort.by("tituloSugerido").descending();
     } else { // Default to "DATE"
-      sort = isAscending ? Sort.by("fechaPropuesta").ascending() : Sort.by("fechaPropuesta").descending();
+      sort =
+          isAscending
+              ? Sort.by("fechaPropuesta").ascending()
+              : Sort.by("fechaPropuesta").descending();
     }
 
     // Convert genres list to a single comma-separated string
@@ -139,7 +149,9 @@ public class PropuestaElementoService {
 
     // Use the publication state from the DTO or default to AVAILABLE
     nuevoElemento.setEstadoPublicacion(
-        dto.getEstadoPublicacion() != null ? dto.getEstadoPublicacion() : EstadoPublicacion.AVAILABLE);
+        dto.getEstadoPublicacion() != null
+            ? dto.getEstadoPublicacion()
+            : EstadoPublicacion.AVAILABLE);
 
     propuestaRepo.save(propuesta);
 
@@ -151,10 +163,14 @@ public class PropuestaElementoService {
 
   @Transactional
   public void rechazarPropuesta(Long propuestaId, Long revisorId, String motivo) {
-    PropuestaElemento propuesta = propuestaRepo.findById(propuestaId)
-        .orElseThrow(() -> new ResourceNotFoundException("{exception.propuesta.not_found}"));
-    Usuario revisor = usuarioRepo.findById(revisorId)
-        .orElseThrow(() -> new ResourceNotFoundException("{exception.user.not_found}"));
+    PropuestaElemento propuesta =
+        propuestaRepo
+            .findById(propuestaId)
+            .orElseThrow(() -> new ResourceNotFoundException("{exception.propuesta.not_found}"));
+    Usuario revisor =
+        usuarioRepo
+            .findById(revisorId)
+            .orElseThrow(() -> new ResourceNotFoundException("{exception.user.not_found}"));
     propuesta.setEstadoPropuesta(EstadoPropuesta.RECHAZADO);
     propuesta.setRevisor(revisor);
     propuesta.setComentariosRevision(motivo);

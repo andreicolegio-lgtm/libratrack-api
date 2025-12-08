@@ -116,9 +116,7 @@ public class PropuestaElemento {
   // RELACIÓN CON ELEMENTO CREADO
   // =============================================================================================
 
-  /**
-   * Elemento creado a partir de esta propuesta (si fue aprobada).
-   */
+  /** Elemento creado a partir de esta propuesta (si fue aprobada). */
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "elemento_creado_id")
   private Elemento elementoCreado;

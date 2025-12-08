@@ -31,7 +31,7 @@ public class ResenaResponseDTO {
       this.autorFotoPerfilUrl = resena.getUsuario().getFotoPerfilUrl();
       this.usuarioId = resena.getUsuario().getId(); // Asignar usuarioId
     } else {
-      this.usernameAutor = "Usuario Eliminado";
+      this.usernameAutor = null;
     }
   }
 

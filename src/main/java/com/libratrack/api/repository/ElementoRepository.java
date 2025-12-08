@@ -135,7 +135,8 @@ public interface ElementoRepository extends JpaRepository<Elemento, Long> {
       Pageable pageable);
 
   /**
-   * Searches for public elements with sorting, filtering, and eager loading to avoid null data issues.
+   * Searches for public elements with sorting, filtering, and eager loading to avoid null data
+   * issues.
    *
    * @param search The search term for the element title.
    * @param types The types to filter by.
@@ -143,12 +144,15 @@ public interface ElementoRepository extends JpaRepository<Elemento, Long> {
    * @param pageable Pagination configuration.
    * @return A page of elements matching the search criteria.
    */
-  @Query("SELECT e FROM Elemento e " +
-         "LEFT JOIN FETCH e.tipo " +      // <--- CLAVE PARA EVITAR 'TIPO DESCONOCIDO'
-         "LEFT JOIN FETCH e.generos " +   // <--- CLAVE PARA EVITAR 'GENEROS VACIOS'
-         "WHERE (:search IS NULL OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-         "AND (:types IS NULL OR e.tipo.nombre IN :types) " +
-         "AND (:genres IS NULL OR EXISTS (SELECT g FROM e.generos g WHERE g.nombre IN :genres))")
+  @Query(
+      "SELECT e FROM Elemento e "
+          + "LEFT JOIN FETCH e.tipo "
+          + // <--- CLAVE PARA EVITAR 'TIPO DESCONOCIDO'
+          "LEFT JOIN FETCH e.generos "
+          + // <--- CLAVE PARA EVITAR 'GENEROS VACIOS'
+          "WHERE (:search IS NULL OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :search, '%'))) "
+          + "AND (:types IS NULL OR e.tipo.nombre IN :types) "
+          + "AND (:genres IS NULL OR EXISTS (SELECT g FROM e.generos g WHERE g.nombre IN :genres))")
   Page<Elemento> searchPublicElementos(
       @Param("search") String search,
       @Param("types") List<String> types,

@@ -47,11 +47,11 @@ public class ElementoController {
 
     // Construimos el Pageable básico (el servicio se encarga del Sort complejo)
     Pageable pageable = PageRequest.of(page, size);
-    
+
     // CAMBIO CLAVE: Llamamos a searchElementos (el método nuevo) en vez de findAllElementos
     Page<ElementoResponseDTO> pagina =
         elementoService.searchElementos(pageable, searchText, types, genres, sortMode, isAscending);
-        
+
     return ResponseEntity.ok(pagina);
   }
 

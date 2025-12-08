@@ -30,9 +30,7 @@ public class ModeracionController {
 
   @Autowired private AdminService adminService;
 
-  /**
-   * Lista las propuestas filtradas por estado, texto, tipos y géneros.
-   */
+  /** Lista las propuestas filtradas por estado, texto, tipos y géneros. */
   @GetMapping
   public ResponseEntity<List<PropuestaResponseDTO>> getPropuestasPorEstado(
       @RequestParam(value = "estado", defaultValue = "PENDIENTE") String estadoStr,
@@ -92,7 +90,7 @@ public class ModeracionController {
    * @param types Optional list of types to filter the elements.
    * @param genres Optional list of genres to filter the elements.
    * @param sort The sorting criteria (default is by title).
-   * @param asc  Whether the sorting should be ascending (default is true).
+   * @param asc Whether the sorting should be ascending (default is true).
    * @return A paginated response of elements created by the admin.
    */
   @GetMapping("/elementos-creados")

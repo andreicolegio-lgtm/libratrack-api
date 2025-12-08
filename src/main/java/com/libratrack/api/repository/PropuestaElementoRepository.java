@@ -38,13 +38,13 @@ public interface PropuestaElementoRepository extends JpaRepository<PropuestaElem
    * @return Lista de propuestas coincidentes.
    */
   @Query(
-      "SELECT p FROM PropuestaElemento p " +
-      "JOIN FETCH p.proponente " +
-      "LEFT JOIN FETCH p.revisor " +
-      "WHERE p.estadoPropuesta = :estado " +
-      "AND (:search IS NULL OR LOWER(p.tituloSugerido) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-      "AND (:types IS NULL OR p.tipoSugerido IN :types) " +
-      "AND (:genres IS NULL OR p.generosSugeridos LIKE CONCAT('%', :genres, '%'))")
+      "SELECT p FROM PropuestaElemento p "
+          + "JOIN FETCH p.proponente "
+          + "LEFT JOIN FETCH p.revisor "
+          + "WHERE p.estadoPropuesta = :estado "
+          + "AND (:search IS NULL OR LOWER(p.tituloSugerido) LIKE LOWER(CONCAT('%', :search, '%'))) "
+          + "AND (:types IS NULL OR p.tipoSugerido IN :types) "
+          + "AND (:genres IS NULL OR p.generosSugeridos LIKE CONCAT('%', :genres, '%'))")
   Page<PropuestaElemento> searchPropuestas(
       @Param("estado") EstadoPropuesta estado,
       @Param("search") String search,

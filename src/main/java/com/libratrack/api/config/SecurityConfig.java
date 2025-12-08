@@ -70,7 +70,9 @@ public class SecurityConfig {
             "http://localhost:3000", // React/Next default
             "http://localhost:5000", // Flutter Web default
             "http://10.0.2.2", // Emulador Android Loopback
-            "http://10.0.2.2:8080"));
+            "http://10.0.2.2:8080",
+            "192.168.1.190",
+            "192.168.1.190:8080"));
 
     configuration.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

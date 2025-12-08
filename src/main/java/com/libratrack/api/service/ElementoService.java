@@ -167,22 +167,23 @@ public class ElementoService {
     // Estado de Publicación
     // Si viene nulo, mantenemos el que tenía o ponemos uno por defecto
     if (dto.getEstadoPublicacion() != null) {
-        elemento.setEstadoPublicacion(dto.getEstadoPublicacion());
+      elemento.setEstadoPublicacion(dto.getEstadoPublicacion());
     } else if (elemento.getEstadoPublicacion() == null) {
-        elemento.setEstadoPublicacion(EstadoPublicacion.AVAILABLE); // Valor por defecto
+      elemento.setEstadoPublicacion(EstadoPublicacion.AVAILABLE); // Valor por defecto
     }
 
     // Secuelas / Cronología
     if (dto.getSecuelaIds() != null && !dto.getSecuelaIds().isEmpty()) {
-        Set<Elemento> nuevasSecuelas = dto.getSecuelaIds().stream()
-            .map(id -> elementoRepository.findById(id).orElse(null))
-            .filter(java.util.Objects::nonNull)
-            .collect(java.util.stream.Collectors.toSet());
+      Set<Elemento> nuevasSecuelas =
+          dto.getSecuelaIds().stream()
+              .map(id -> elementoRepository.findById(id).orElse(null))
+              .filter(java.util.Objects::nonNull)
+              .collect(java.util.stream.Collectors.toSet());
 
-        elemento.setSecuelas(nuevasSecuelas);
+      elemento.setSecuelas(nuevasSecuelas);
     } else if (dto.getSecuelaIds() != null) {
-        // Si envían una lista vacía explícitamente, limpiamos las relaciones
-        elemento.getSecuelas().clear();
+      // Si envían una lista vacía explícitamente, limpiamos las relaciones
+      elemento.getSecuelas().clear();
     }
   }
 
@@ -198,18 +199,15 @@ public class ElementoService {
     // 1. TRADUCCIÓN DE ORDENAMIENTO
     String sortColumn = "titulo"; // Por defecto ALPHA
     if ("DATE".equalsIgnoreCase(sortMode)) {
-        sortColumn = "id"; // O "id" si prefieres orden de creación
+      sortColumn = "id"; // O "id" si prefieres orden de creación
     }
 
     // 2. Construcción del Sort con la columna real
     Sort sort = Sort.by(isAscending ? Sort.Direction.ASC : Sort.Direction.DESC, sortColumn);
-    
+
     // 3. Crear PageRequest
-    Pageable sortedPageable = PageRequest.of(
-        pageable.getPageNumber(), 
-        pageable.getPageSize(), 
-        sort
-    );
+    Pageable sortedPageable =
+        PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
     // Normalización de filtros
     List<String> typesFilter = (types != null && !types.isEmpty()) ? types : null;
@@ -217,7 +215,8 @@ public class ElementoService {
 
     // Llamada al repositorio (Asegúrate de haber aplicado el paso 3 abajo)
     Page<Elemento> paginaDeElementos =
-        elementoRepository.searchPublicElementos(searchText, typesFilter, genresFilter, sortedPageable);
+        elementoRepository.searchPublicElementos(
+            searchText, typesFilter, genresFilter, sortedPageable);
 
     return paginaDeElementos.map(ElementoResponseDTO::new);
   }

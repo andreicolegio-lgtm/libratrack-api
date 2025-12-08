@@ -11,7 +11,6 @@ import com.libratrack.api.repository.ElementoRepository;
 import com.libratrack.api.repository.ResenaRepository;
 import com.libratrack.api.repository.UsuarioRepository;
 import com.libratrack.api.security.CustomUserDetails;
-
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,7 +122,10 @@ public class ResenaService {
     boolean isOwner = resena.getUsuario().getId().equals(userDetails.getId());
     boolean isAdminOrModerator =
         userDetails.getAuthorities().stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN") || auth.getAuthority().equals("ROLE_MODERATOR"));
+            .anyMatch(
+                auth ->
+                    auth.getAuthority().equals("ROLE_ADMIN")
+                        || auth.getAuthority().equals("ROLE_MODERATOR"));
 
     if (!isOwner && !isAdminOrModerator) {
       throw new SecurityException("{exception.resena.access_denied}");

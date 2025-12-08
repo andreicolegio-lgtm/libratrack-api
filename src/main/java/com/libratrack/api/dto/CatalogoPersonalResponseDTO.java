@@ -67,7 +67,9 @@ public class CatalogoPersonalResponseDTO {
       this.elementoTotalPaginasLibro = entrada.getElemento().getTotalPaginasLibro();
 
       String rawDuracion = entrada.getElemento().getDuracion();
-      if (rawDuracion != null && rawDuracion.length() >= 8 && rawDuracion.matches("\\d{2}:\\d{2}:\\d{2}")) {
+      if (rawDuracion != null
+          && rawDuracion.length() >= 8
+          && rawDuracion.matches("\\d{2}:\\d{2}:\\d{2}")) {
         // Only truncate if it matches the long time format HH:mm:ss
         this.elementoDuracion = rawDuracion.substring(0, 5);
       } else {
@@ -75,11 +77,12 @@ public class CatalogoPersonalResponseDTO {
         this.elementoDuracion = rawDuracion;
       }
 
-      this.elementoGeneros = entrada.getElemento().getGeneros() != null
-          ? entrada.getElemento().getGeneros().stream()
-              .map(Genero::getNombre)
-              .collect(Collectors.joining(", "))
-          : null;
+      this.elementoGeneros =
+          entrada.getElemento().getGeneros() != null
+              ? entrada.getElemento().getGeneros().stream()
+                  .map(Genero::getNombre)
+                  .collect(Collectors.joining(", "))
+              : null;
 
       if (entrada.getElemento().getTipo() != null) {
         this.elementoTipoNombre = entrada.getElemento().getTipo().getNombre();

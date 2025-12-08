@@ -30,6 +30,7 @@ public class AdminController {
 
   @Autowired private UsuarioService usuarioService;
   @Autowired private ElementoService elementoService;
+
   /** Lista todos los usuarios registrados con paginación y filtros opcionales. */
   @GetMapping("/usuarios")
   public ResponseEntity<Page<UsuarioResponseDTO>> getAllUsuarios(
